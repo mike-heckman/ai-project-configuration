@@ -22,6 +22,13 @@ wheels/
 .installed.cfg
 *.egg
 
+## Output and logs -- the following directories are blocked via global gitignore.
+#logs/
+#temp/
+#public-dev/
+#extract/
+
+
 # Virtual Environments
 .env
 .venv/
