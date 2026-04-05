@@ -32,7 +32,7 @@ get_project_root() {
 PROJECT_ROOT="${PROJECT_ROOT:-${VSCODE_CWD:-$(get_project_root "$PWD")}}"
 
 # Defines the install location of the project template, which is used for sourcing shared functions and configs.
-source "${PROJECT_ROOT}/scripts/project_template_dir.sh"
+source "${PROJECT_ROOT}/../.project_template_dir.sh"
 
 # Copying the configuration to the project root allows it to be checked into git with the project.
 export RUFF_CONFIG="${PROJECT_ROOT}/.ruff-master-config.toml"

@@ -33,12 +33,11 @@ mkdir -p scripts src tests logs temp docs/architecture-decisions
 
 # 2. Add document templates if they don't exist
 cd docs
-for doc in "${SCRIPT_DIR}/document-templates/"*; do
+for doc in "${SCRIPT_DIR}/../gemini/document-templates/"*; do
     BASE_DOC="$(basename "$doc")"
-    if [ -f "$BASE_DOC" ]; then
-        rm "$BASE_DOC"
+    if [ ! -f "${BASE_DOC}" ]; then
+        cp -a "$doc" "${BASE_DOC}"
     fi
-    ln "$doc"
 done
 cd ..
 
@@ -69,10 +68,13 @@ echo "Creating .gitignore..."
 cp -a "${SOURCE_DIR}/.gitignore" .gitignore
 
 # 8. Link scripts to the project
-cd scripts
-echo "export PROJECT_TEMPLATE_DIR=\"${SOURCE_DIR}\"" > project_template_dir.sh
+if [ ! -f "../project_template_dir.sh" ]; then
+    echo "export PROJECT_TEMPLATE_DIR=\"${SOURCE_DIR}\"" > ../.project_template_dir.sh
+fi
 
-for script in "${SOURCE_DIR}/scripts/*.sh"; do
+cd scripts
+
+for script in "${SOURCE_DIR}/scripts/"*.sh; do
     BASE_SCRIPT="$(basename "$script")"
     if [ -e "$BASE_SCRIPT" ]; then
         rm -f "$BASE_SCRIPT"

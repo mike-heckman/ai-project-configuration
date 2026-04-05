@@ -34,11 +34,18 @@ fi
 ln -sf "${SOURCE_DIR}/global-rules.md" "${GEMINI_DIR}/GEMINI.md"
 
 # Workflows
-if [ -d "${GEMINI_DIR}/antigravity/global_workflows" ]; then
-    echo "Existing Gemini workflows directory found, removing..."
-    rm -rf "${GEMINI_DIR}/antigravity/global_workflows"
+WORKFLOWS_DIR="${GEMINI_DIR}/antigravity/global_workflows"
+if [ ! -d "${WORKFLOWS_DIR}" ]; then
+    mkdir -p "${WORKFLOWS_DIR}"
 fi
-ln -sf "${SOURCE_DIR}/global-workflows" "${GEMINI_DIR}/antigravity/global_workflows"
+for workflow in "${SOURCE_DIR}/global-workflows/"*; do
+    BASE_WORKFLOW="$(basename "$workflow")"
+    if [ -f "${WORKFLOWS_DIR}/${BASE_WORKFLOW}" ]; then
+        echo "Existing Gemini workflow ${BASE_WORKFLOW} found, removing..."
+        rm -f "${WORKFLOWS_DIR}/${BASE_WORKFLOW}"
+    fi
+    ln "$workflow" "${WORKFLOWS_DIR}/${BASE_WORKFLOW}"
+done
 
 # Document templates
 if [ -d "${GEMINI_DIR}/document-templates" ]; then
@@ -49,12 +56,21 @@ ln -sf "${SOURCE_DIR}/document-templates" "${GEMINI_DIR}/document-templates"
 
 echo "Gemini initialization complete. Global rules, workflows, and document templates are now linked to ${GEMINI_DIR}."
 
+# Cheatsheet
+CHEATSHEET_SOURCE="${SOURCE_DIR}/cheat-sheet.md"
+CHEATSHEET_DEST="${GEMINI_DIR}/cheat-sheet.md"
+if [ -f "${CHEATSHEET_DEST}" ]; then
+    echo "Existing Gemini cheat sheet found, removing..."
+    rm -f "${CHEATSHEET_DEST}"
+fi
+ln -sf "${CHEATSHEET_SOURCE}" "${CHEATSHEET_DEST}"
+
 ##
 ## Setup git global ignore
 ##
 
 # Using \n for newlines in the payload
-PAYLOAD="logs/\ntemp/\npublic-dev/\nextract/"
+PAYLOAD="logs/\ntemp/\npublic-dev/\nextract/\nextract"
 
 # 1. Get the path
 GLOBAL_IGNORE=$(git config --get core.excludesfile)

@@ -21,13 +21,14 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+.pyre/
 
 ## Output and logs -- the following directories are blocked via global gitignore.
 #logs/
 #temp/
 #public-dev/
 #extract/
-
+.coverage
 
 # Virtual Environments
 .env

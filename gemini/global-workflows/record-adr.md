@@ -7,22 +7,30 @@ description: Create a new Architecture Decision Record (ADR) in docs/adr/ using 
 2. **Draft Content:** Create a new markdown file in `docs/architecture-decisions/` using the following boilerplate:
 
 ---
-# ADR-[NUMBER]: [TITLE]
+# ADR-[NUMBER]: [Discreet Title of Change]
 
-* **Status:** [Proposed | Accepted | Superseded]
-* **Date:** {{current_date}}
-* **Context:**
-  What is the problem we are solving? Why is a decision needed now? (e.g., "The current JSON parser is too slow.")
+* **Status:** [Proposed | Accepted | Implemented | Superseded | Refused | Deferred]
+* **Date:** {{current_date}} (Initial) / {{completion_date}} (Completed)
+* **Corpus/Module:** [e.g., icarus-calculator: src/icarus_calculator/registry.py]
 
-* **Decision:**
-  What are we doing? (e.g., "Switch to orjson for all serialization.")
+## 📋 Context
+What is the technical or architectural problem we are solving? Why is a decision needed now? Describe the "Status Quo" and any identified risks (e.g., "The `DataGenerator` complexity score is 45, making it a high-risk hotspot.").
 
-* **Consequences:**
-  - **Positive:** Speed increase, lower memory footprint.
-  - **Negative:** Adds a C-extension dependency.
+## 🎯 Decision
+What specific action are we taking? Define the "Definition of Done" for this decision (e.g., "Extract all row formatting into `_format_row` sub-methods to reduce complexity to < 15.").
 
-* **Alternatives Considered:**
-  Why were other options (e.g., ujson, msgpack) rejected?
+## ⚖️ Consequences
+- **Positive:** [e.g., Improved testability, lower maintenance cost, clear separation of concerns.]
+- **Negative:** [e.g., Increased method count, slight performance overhead for extra calls.]
+
+## 🔄 Alternatives Considered
+Briefly list alternative technical paths and why they were rejected (e.g., "Functional programming approach rejected for consistency with the existing Class-based architecture.").
+
+## ✅ Summary of Result
+*Update this section ONLY when the ADR transitions to 'Implemented'.*
+- **Action Taken:** [e.g., Refactored 9 methods across 4 modules.]
+- **Key Metrics:** [e.g., Complexity reduced from 40 to 12; test coverage maintained at 81%.]
+- **Verification:** [e.g., All unit and regression tests passed (Exit 0).]
 ---
 
 3. **Verify:** Ask the user to review the drafted ADR before finalizing.
