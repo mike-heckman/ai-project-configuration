@@ -9,7 +9,7 @@
 ## 💾 Persistence Rules
 - **Automatic Save:** If the user says "Pause," "Stop," or "Let's pick this up later," you MUST immediately:
     1. Update `./docs/software-design-document.md`.
-    2. Log the current phase/state in `./agent_context.md`.
+    2. Log the current phase/state in `./.agent-context.md`.
 - **State Recovery:** At the start of a session, summarize the last known state from the files above to ensure alignment.
 
 ## ⚖️ Decision Integrity

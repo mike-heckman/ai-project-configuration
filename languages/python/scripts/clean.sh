@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # NOTE: This script is hard-linked via the ai-project-configuration/_setup.sh script. 
 # Edits to this file should be made in that location to ensure that edits are 
@@ -8,7 +8,7 @@
 
 set -e
 
-echo "Running pre-commit checks..."
-./scripts/lint.sh
-./scripts/test.sh
-
+if [ -d "temp" ]; then
+    echo "Removing temp directory contents..."
+    rm -rf temp/*
+fi

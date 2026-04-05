@@ -7,7 +7,7 @@ Standard routines to keep the codebase "Release Ready."
 | Command | Purpose | When to use? |
 | :--- | :--- | :--- |
 | **`/lint`** | Syncs `master_ruff.toml` and fixes code. | Before every commit. |
-| **`/ready`** | Runs lint, tests, and updates `agent_context.md`. | Before requesting a "Manual Review." |
+| **`/ready`** | Runs lint, tests, and updates `./.agent-context.md`. | Before requesting a "Manual Review." |
 | **`/sync-global`** | Re-indexes `~/.gemini/` into MCP memory. | After you tweak a `role_*.md` file. |
 | **`/record-adr`** | Captures a "Why" behind a major change. | When adding libraries or shifting schemas. |
 
@@ -50,4 +50,4 @@ When you see these prefixes, the agent is locked into specific constraints:
 2.  **Identity:** Never use `id` alone; always `[resource]_id`.
 3.  **Booleans:** Must start with a verb (`is_`, `has_`, `can_`).
 4.  **ADRs:** Any change > 5 files or new library **requires** a `/record-adr`.
-5.  **Persistence:** Use "Pause" or "Stop" to trigger an auto-save to `agent_context.md`.
+5.  **Persistence:** Use "Pause" or "Stop" to trigger an auto-save to `./.agent-context.md`.
