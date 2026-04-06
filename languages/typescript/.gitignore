@@ -1,0 +1,35 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Typescript
+*.tsbuildinfo
+
+# Coverage
+coverage/
+.nyc_output/
+.coverage
+
+# Virtual Environments & Env variables
+.env
+.env.local
+.env.test
+
+# IDEs
+.idea/
+.vscode/
+
+## Output and logs -- the following directories are blocked via global gitignore.
+#logs/
+#temp/
+#public-dev/
+#extract/

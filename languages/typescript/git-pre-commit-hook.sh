@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# NOTE: Similar to Python, this relies on `pre-commit` binary to orchestrate the YAML hook.
+# The `pre-commit` binary is often installed system-wide via pip or brew.
+
 set +e
 
 # Create a temporary file for logs
@@ -18,7 +21,11 @@ SOURCE_DIR=$(realpath "${SCRIPT_DIR}")
 # Wrap commands in a subshell and redirect output
 if ! {
   cp -a "${SOURCE_DIR}/git-pre-commit-hook.yaml" .pre-commit-config.yaml
-  uv tool install pre-commit
+  # We assume pre-commit is installed on the host system or via uv tool from previous configs.
+  # If it is not present, we will install it globally using uv (since it's a global dependency).
+  if ! command -v pre-commit &> /dev/null; then
+    uv tool install pre-commit
+  fi
   pre-commit install
   pre-commit migrate-config
 } > "$LOG_FILE" 2>&1; then

@@ -4,9 +4,10 @@
 ## 🏁 Session Initialization
 1. **Sync:** Run `jCodeMunch.resolve_repo` and read `./.agent-context.md`.
 2. **ACK:** Briefly summarize the "Current Mission" and "Known Gotchas".
-3. **Workflow Discovery (MANDATORY):** You MUST run `ls /home/mike/.gemini/antigravity/global_workflows/` and `./.agents/workflows/` (if present) at the start of every session. 
-4. **Wait:** If Active Task is NONE in .agent-context.md, you must wait for a plan approval or a /start-mission trigger before modifying source code.
-5. **Enforcement:** You are STRICTLY PROHIBITED from executing any `.sh` script manually if a corresponding `.md` workflow exists. You MUST follow the workflow steps EXACTLY.
+3. **Workflow Discovery (MANDATORY):** You MUST run `./scripts/read-workflows.sh` at the start of every session. 
+4. **Workflow Usage (MANDATORY):** If a slash command or workflow (e.g., /test, /ready) is relevant, you are strictly forbidden from executing any terminal command until you have first called view_file on that workflow's .md file.
+5. **Wait:** If Active Task is NONE in .agent-context.md, you must wait for a plan approval or a /start-mission trigger before modifying source code.
+6. **Enforcement:** You are STRICTLY PROHIBITED from executing any `.sh` script manually if a corresponding `.md` workflow exists. You MUST follow the workflow steps EXACTLY.
 
 ## 🔍 Code & Docs (jMunch Suite)
 - **Authority:** Use `jCodeMunch` for code and `jDocMunch` for all documentation.

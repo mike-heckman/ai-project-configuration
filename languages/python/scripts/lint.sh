@@ -7,6 +7,7 @@
 #
 
 set -e
+set -o pipefail
 
 if [ -x scripts/_local_lint.sh ]; then
     echo "Running local override script..."
@@ -32,17 +33,17 @@ get_project_root() {
 PROJECT_ROOT="${PROJECT_ROOT:-${VSCODE_CWD:-$(get_project_root "$PWD")}}"
 
 # Defines the install location of the project template, which is used for sourcing shared functions and configs.
-source "${PROJECT_ROOT}/../.project_template_dir.sh"
+source "${PROJECT_ROOT}/../.ai_config_root.sh"
 
 # Copying the configuration to the project root allows it to be checked into git with the project.
 export RUFF_CONFIG="${PROJECT_ROOT}/.ruff-master-config.toml"
-export SOURCE_RUFF_CONFIG="${PROJECT_TEMPLATE_DIR}/ruff-master-config.toml"
+export SOURCE_RUFF_CONFIG="${AI_CONFIG_ROOT}/languages/python/ruff-master-config.toml"
 if [ -f "$SOURCE_RUFF_CONFIG" ]; then
     cp -a "$SOURCE_RUFF_CONFIG" "$RUFF_CONFIG"
 fi
 
 export PYRIGHT_CONFIG="${PROJECT_ROOT}/.pyrightconfig.json"
-export PYRIGHT_SOURCE_CONFIG="${PROJECT_TEMPLATE_DIR}/pyright-master-config.json"
+export PYRIGHT_SOURCE_CONFIG="${AI_CONFIG_ROOT}/languages/python/pyright-master-config.json"
 if [ -f "$PYRIGHT_SOURCE_CONFIG" ]; then
     cp -a "$PYRIGHT_SOURCE_CONFIG" "${PYRIGHT_CONFIG}"
 fi
@@ -56,8 +57,8 @@ if [ -f "${LINT_LOG}" ]; then
     rm -f "${LINT_LOG}"
 fi
 
-echo "Verifying multi-line docstring compliance..."
-touch "${LINT_LOG}"
+echo "Verifying multi-line docstring compliance..." | tee -a "${LINT_LOG}"
+
 if grep -rn '""".*"""' src/ --exclude-dir=tests; then
     echo "ERROR: Single-line docstrings are forbidden. Please use 'Tall' format." | tee -a "${LINT_LOG}"
     exit 1
@@ -71,3 +72,5 @@ uv run ruff format . --config "$RUFF_CONFIG" 2>&1 | tee -a "${LINT_LOG}"
 
 echo "Running Pyright Type Checker..." | tee -a "${LINT_LOG}"
 uv run pyright --project "${PYRIGHT_CONFIG}" 2>&1 | tee -a "${LINT_LOG}"
+
+echo "Completed successfully at $(date)" | tee -a "${LINT_LOG}"

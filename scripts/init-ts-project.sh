@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Initialize a new greenfield Python project using uv and ruff
+# Initialize a new greenfield TypeScript/JavaScript project using pnpm, eslint, and prettier
 
 set -e
 
@@ -11,18 +11,18 @@ fi
 
 # Get the scripts' location to find the source template
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
-SOURCE_DIR=$(realpath "${SCRIPT_DIR}/../languages/python")
+SOURCE_DIR=$(realpath "${SCRIPT_DIR}/../languages/typescript")
 if [ ! -d "$SOURCE_DIR" ]; then
-    echo "No existing Python project structure found at $SOURCE_DIR. Aborting!"
+    echo "No existing TypeScript project structure found at $SOURCE_DIR. Aborting!"
     exit 1
 fi
 
-if [ -f "pyproject.toml" ]; then
-    echo "The pyproject.toml file already exists."
-    echo "Updating a greenfield Python project..."
+if [ -f "package.json" ]; then
+    echo "The package.json file already exists."
+    echo "Updating a greenfield TypeScript project..."
     FRESH_INSTALL=false
 else
-    echo "Bootstrapping greenfield Python project..."
+    echo "Bootstrapping greenfield TypeScript project..."
     FRESH_INSTALL=true
 fi
 
@@ -41,19 +41,26 @@ for doc in "${SCRIPT_DIR}/../gemini/document-templates/"*; do
 done
 cd ..
 
-# 3. Initialize uv project -or- if pyproject.toml exists, check for Ruff configuration
+# 3. Initialize package.json
 if [ "${FRESH_INSTALL}" = true ]; then
-    # Initialize uv project (pinning Python 3.14)
-    # --app sets up a basic application structure
-    # --no-workspace prevents joining an existing monorepo
-    uv init --python 3.14 --app --no-workspace
-elif grep -F "[tool.ruff" pyproject.toml > /dev/null; then
-    echo "WARNING! Ruff configuration already exists in pyproject.toml, must removed manually!"
+    pnpm init
+    pnpm pkg set type="module"
 fi
 
-# 4. Add development dependencies
+# 4. Add development dependencies (matching standard stack)
 echo "Installing development tools..."
-uv add --dev ruff pytest "pytest-cov>=6.3.0" pyright
+pnpm add -D typescript eslint prettier vitest @eslint/js typescript-eslint globals @vitest/coverage-v8
+
+# Copy configs
+if [ ! -f ".eslint.config.js" ]; then
+    cp -a "${SOURCE_DIR}/.eslint.config.js" .eslint.config.js
+fi
+if [ ! -f ".prettierrc" ]; then
+    cp -a "${SOURCE_DIR}/.prettierrc" .prettierrc
+fi
+if [ ! -f ".tsconfig.json" ]; then
+    cp -a "${SOURCE_DIR}/.tsconfig.json" .tsconfig.json
+fi
 
 # 5. Create the .agent-context.md file if it doesn't exist
 if [ ! -f ".agent-context.md" ]; then
@@ -61,16 +68,22 @@ if [ ! -f ".agent-context.md" ]; then
 fi
 
 # 6. Install pre-commit and set up the git hook
-"${SOURCE_DIR}/git-pre-commit-hook.sh"
+if [ -x "${SOURCE_DIR}/git-pre-commit-hook.sh" ]; then
+  "${SOURCE_DIR}/git-pre-commit-hook.sh"
+else
+  # if not executable yet, run via bash
+  bash "${SOURCE_DIR}/git-pre-commit-hook.sh"
+fi
 
 # 7. Setup .gitignore
 echo "Creating .gitignore..."
 cp -a "${SOURCE_DIR}/.gitignore" .gitignore
 
-# 8. Link scripts to the project
-# Get the AI-Config root directory since SOURCE_DIR points directly to languages/python/
+# 8. Link scripts
+# Get the AI-Config root directory since SOURCE_DIR points directly to languages/typescript/
 ROOT_DIR=$(dirname "$(dirname "$SOURCE_DIR")")
 
+# 7. Provide global pointer
 if [ ! -f "../.ai_config_root.sh" ]; then
     echo "export AI_CONFIG_ROOT=\"${ROOT_DIR}\"" > ../.ai_config_root.sh
 fi
