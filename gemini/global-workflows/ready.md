@@ -13,7 +13,6 @@ on_intent: ["Complete task", "I am done", "Finished", "Release ready"]
 
 ## 2. Documentation & Sync
 - **Janitor (First):** Execute the **`/clean`** workflow to purge `./temp/` and reset logs. This ensures no ephemeral "trash" code is indexed.
-- **Verification:** Call `ls ./temp/` to confirm the workspace is clean.
 - **Execute `/update-docs`:** (Updates README, API docs, and Tribal Knowledge).
 - **MCP Index:** Call `jCodeMunch.index_file` (code) and `jDocMunch.index_documentation` (docs).
 

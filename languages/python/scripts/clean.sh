@@ -11,4 +11,14 @@ set -e
 if [ -d "temp" ]; then
     echo "Removing temp directory contents..."
     rm -rf temp/*
+else
+    echo "Temp directory does not exist. Creating temp directory..."
+    mkdir temp
+fi
+
+if [ "$(ls -A ./temp/ | wc -l)" -eq 0 ]; then
+    echo "Temp folder is now empty."
+else
+    echo "Failed to clean temp folder. Current contents:"
+    ls -la ./temp/
 fi
