@@ -94,3 +94,10 @@ fi
 # Append the new block
 printf "\n$MARKER_START\n$PAYLOAD\n$MARKER_END\n" >> "$GLOBAL_IGNORE"
 
+echo ""
+echo "--------------------------------------------------------"
+echo "  TIP: Update all registered downstream projects by"
+echo "       running: ./scripts/update-all.sh"
+echo "--------------------------------------------------------"
+echo ""
+

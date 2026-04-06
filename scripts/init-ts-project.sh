@@ -112,4 +112,14 @@ done
 echo "Applying initial formatting..."
 scripts/lint.sh > /dev/null 2>&1 || true
 
+# 11. Register project for global updates
+REGISTRY_DIR="${HOME}/.gemini/registered"
+mkdir -p "$REGISTRY_DIR"
+REGISTRY_FILE="${REGISTRY_DIR}/ts_locations.conf"
+PROJECT_PATH=$(pwd)
+if ! grep -Fxq "$PROJECT_PATH" "$REGISTRY_FILE" 2>/dev/null; then
+    echo "$PROJECT_PATH" >> "$REGISTRY_FILE"
+    echo "Project registered for global updates."
+fi
+
 echo "Environment initialized!"
