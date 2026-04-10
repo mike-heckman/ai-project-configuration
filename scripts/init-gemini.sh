@@ -53,20 +53,20 @@ if [ -d "${SOURCE_DIR}/global-workflows" ]; then
 fi
 
 # Hardlink nested skill workflows
-SKILLS_DIR="${WORKFLOWS_DIR}/skills"
+SKILLS_DIR="${GEMINI_DIR}/antigravity/skills"
 if [ ! -d "${SKILLS_DIR}" ]; then
     mkdir -p "${SKILLS_DIR}"
 fi
 
 if [ -d "${SOURCE_DIR}/skills" ]; then
-    for skill in "${SOURCE_DIR}/skills/"*/*.md; do
-        [ -e "$skill" ] || continue
+    for skill in "${SOURCE_DIR}/skills/"*; do
+        [ -d "$skill" ] || continue
         BASE_SKILL="$(basename "$skill")"
-        if [ -f "${SKILLS_DIR}/${BASE_SKILL}" ]; then
+        if [ -d "${SKILLS_DIR}/${BASE_SKILL}" ] || [ -l "${SKILLS_DIR}/${BASE_SKILL}" ]; then
             echo "Existing Gemini skill ${BASE_SKILL} found, removing..."
-            rm -f "${SKILLS_DIR}/${BASE_SKILL}"
+            rm -rf "${SKILLS_DIR}/${BASE_SKILL}"
         fi
-        ln -f "$skill" "${SKILLS_DIR}/${BASE_SKILL}"
+        ln -s "$skill" "${SKILLS_DIR}/${BASE_SKILL}"
     done
 fi
 
