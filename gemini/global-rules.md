@@ -1,6 +1,5 @@
 # 🌐 Global Agent Instructions
 
-
 ## 🏁 Session Initialization
 1. **Sync:** Run `jCodeMunch.resolve_repo` and read `./.agent-context.md`.
 2. **ACK:** Briefly summarize the "Current Mission" and "Known Gotchas".
@@ -16,7 +15,7 @@
 - **Standard:** Use `query_knowledge_base` (Global scope) for architectural alignment.
 
 ## 🧠 Specialist & ADR Protocol
-- **Routing:** Trigger `/audit`, `/interact`, `/scale`, `/ux`, or `/docs-audit` for reviews. Load `role_*.md` from global index and prefix responses with the Specialist Header.
+- **Routing:** When executing a workflow, load the governing `SKILL.md` from its designated skills folder (e.g., `gemini/skills/product/SKILL.md`) and adhere to its persona constraints. Prefix responses with a Specialist Header if applicable.
 - **Implementation:** No code changes until "Consensus Reached."
 - **ADR Authority:** Run `/record-adr` for library changes, schema shifts, or >5 file impacts. 
 - **ADR as Context:** Always search `./docs/architectural-decisions/` via `jDocMunch` before refactoring. Respect past decisions unless explicitly superseded.
@@ -37,4 +36,19 @@
 - **Git Authority:** Execution of `git add`, `commit`, `push`, or `stash` is **PROHIBITED**.
 
 ## ✅ Completion Protocol
-- **MANDATORY:** You must successfully complete the **`/ready`** workflow before declaring any task finished. This is the sole path to "Release Ready" status.
+- **Unit Completion (DoD):** A `task-XXXX.md` is complete ONLY when the Reviewer moves it to `./docs/backlog/done/`.
+- **Mission Completion:** You must successfully complete the **`/ready`** workflow before declaring any major task or mission finished.
+
+## 📋 Backlog & Units of Work
+1. **Source:** All work originates from the Architect as discrete `task-XXXX.md` files in `./docs/backlog/`.
+2. **Ready (DoR):** A task is ready for the Coder when it contains a clear Implementation Plan and Success Criteria.
+3. **Priority:** The Coder picks the lowest-numbered task unless instructed otherwise by the USER.
+4. **Handoff:** Coder -> Reviewer (for Unit DoD) -> Done.
+
+## Output Rules for every response
+- Lead with the answer. No preamble.
+- Use contractions. Short sentences.
+- No filler: delve, tapestry, leverage, multifaceted, seamless, utilize.
+- No openers ("Great question!") or closers ("Hope this helps!").
+- One hedge per claim max. Do not restate what was just said.
+- JSON: no indentation, no echo fields, no nulls, no derived counts.

@@ -33,26 +33,42 @@ if [ -f "${GEMINI_DIR}/GEMINI.md" ]; then
 fi
 ln -sf "${SOURCE_DIR}/global-rules.md" "${GEMINI_DIR}/GEMINI.md"
 
-# Workflows
+# Workflows & Skills
 WORKFLOWS_DIR="${GEMINI_DIR}/antigravity/global_workflows"
 if [ ! -d "${WORKFLOWS_DIR}" ]; then
     mkdir -p "${WORKFLOWS_DIR}"
 fi
-for workflow in "${SOURCE_DIR}/global-workflows/"*; do
-    BASE_WORKFLOW="$(basename "$workflow")"
-    if [ -f "${WORKFLOWS_DIR}/${BASE_WORKFLOW}" ]; then
-        echo "Existing Gemini workflow ${BASE_WORKFLOW} found, removing..."
-        rm -f "${WORKFLOWS_DIR}/${BASE_WORKFLOW}"
-    fi
-    ln "$workflow" "${WORKFLOWS_DIR}/${BASE_WORKFLOW}"
-done
 
-# Document templates
-if [ -d "${GEMINI_DIR}/document-templates" ]; then
-    echo "Existing Gemini document templates directory found, removing..."
-    rm -rf "${GEMINI_DIR}/document-templates"
+# Hardlink global baseline workflows
+if [ -d "${SOURCE_DIR}/global-workflows" ]; then
+    for workflow in "${SOURCE_DIR}/global-workflows/"*.md; do
+        [ -e "$workflow" ] || continue
+        BASE_WORKFLOW="$(basename "$workflow")"
+        if [ -f "${WORKFLOWS_DIR}/${BASE_WORKFLOW}" ]; then
+            echo "Existing Gemini workflow ${BASE_WORKFLOW} found, removing..."
+            rm -f "${WORKFLOWS_DIR}/${BASE_WORKFLOW}"
+        fi
+        ln -f "$workflow" "${WORKFLOWS_DIR}/${BASE_WORKFLOW}"
+    done
 fi
-ln -sf "${SOURCE_DIR}/document-templates" "${GEMINI_DIR}/document-templates"
+
+# Hardlink nested skill workflows
+SKILLS_DIR="${WORKFLOWS_DIR}/skills"
+if [ ! -d "${SKILLS_DIR}" ]; then
+    mkdir -p "${SKILLS_DIR}"
+fi
+
+if [ -d "${SOURCE_DIR}/skills" ]; then
+    for skill in "${SOURCE_DIR}/skills/"*/*.md; do
+        [ -e "$skill" ] || continue
+        BASE_SKILL="$(basename "$skill")"
+        if [ -f "${SKILLS_DIR}/${BASE_SKILL}" ]; then
+            echo "Existing Gemini skill ${BASE_SKILL} found, removing..."
+            rm -f "${SKILLS_DIR}/${BASE_SKILL}"
+        fi
+        ln -f "$skill" "${SKILLS_DIR}/${BASE_SKILL}"
+    done
+fi
 
 echo "Gemini initialization complete. Global rules, workflows, and document templates are now linked to ${GEMINI_DIR}."
 

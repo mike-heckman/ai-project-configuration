@@ -29,7 +29,7 @@ fi
 # Build language independent project structure
 
 # 1. Create directory structure
-mkdir -p scripts src tests logs temp docs/architecture-decisions
+mkdir -p scripts src tests logs temp docs/architecture-decisions docs/backlog/done
 
 # 2. Add document templates if they don't exist
 cd docs

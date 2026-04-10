@@ -14,5 +14,5 @@ triggers:
 - **Initialization:** Call `jCodeMunch.resolve_repo` to ensure the symbol map is fresh for the new mission.
 
 ## 2. Workspace Preparation
-- **ADR Check:** If the plan involves architectural shifts, verify `/record-adr` was run during the planning phase.
+- **ADR Check:** Before starting, check `./docs/architecture-decisions/` for any new decisions that might affect the implementation of this task.
 - **Goal Alignment:** Briefly restate the "Active Task" and the first immediate code change to the user to confirm the sync.
