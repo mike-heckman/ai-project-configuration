@@ -7,12 +7,12 @@ description: "Synchronizes README, Architecture docs, and ./.agent-context.md wi
 
 ## 1. Delta Analysis
 - **Detect:** Use `jCodeMunch.get_repo_outline` and `get_file_outline` to identify new public APIs, modified modules, or changed signatures.
-- **Scope:** Identify which `docs/` files are impacted by these code deltas.
+- **Scope:** Identify which `./docs/` files are impacted by these code deltas.
 
 ## 2. External & Internal Documentation
 - **README.md:** Update "Features," "Usage," or "Installation" if user-facing interfaces or dependencies changed.
-- **API Reference:** Update `docs/api_reference.md` or equivalent for all public symbol changes.
-- **Setup:** Update `docs/setup.md` if environment variables or `uv` configurations shifted.
+- **API Reference:** Update `./docs/api_reference.md` or equivalent for all public symbol changes.
+- **Setup:** Update `./docs/setup.md` if environment variables or `uv` configurations shifted.
 
 ## 3. Agent Context Maintenance (.agent-context.md)
 - **Review:** Open `./.agent-context.md`.

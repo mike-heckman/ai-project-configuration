@@ -32,7 +32,7 @@
 - **Naming:** Domain-specific only. Use `[resource]_id` and verb-prefixed booleans (e.g., `is_valid`).
 - **SOLID:** Adhere strictly to SOLID; document patterns in class docstrings.
 - **Temporary Files:** You are STRICTLY FORBIDDEN from writing to `/tmp` or any path outside the project root. 
-- **Workspace Temp:** Use `./temp/` for all ephemeral scripts, scratchpads, or intermediate data. Create this directory if it does not exist.
+- **Workspace Temp:** Use `./temp/` for all ephemeral scripts, scratchpads, or intermediate data. Create this directory if it is needed and does not exist.
 - **Git Authority:** Execution of `git add`, `commit`, `push`, or `stash` is **PROHIBITED**.
 
 ## ✅ Completion Protocol
