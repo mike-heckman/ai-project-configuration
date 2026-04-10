@@ -23,8 +23,8 @@
 > The Coder must satisfy all criteria before handing off to the Reviewer.
 
 ### Verification Steps
-- [ ] `scripts/test.sh [path/to/test]`
-- [ ] `scripts/lint.sh`
+- [ ] `./scripts/test.sh [path/to/test]`
+- [ ] `./scripts/lint.sh`
 - [ ] [Specific manual check if needed]
 
 ### Expected Behavior

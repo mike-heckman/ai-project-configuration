@@ -15,13 +15,13 @@
 - **Standard:** Use `query_knowledge_base` (Global scope) for architectural alignment.
 
 ## 🧠 Specialist & ADR Protocol
-- **Routing:** When executing a workflow, load the governing `SKILL.md` from its designated skills folder (e.g., `gemini/skills/product/SKILL.md`) and adhere to its persona constraints. Prefix responses with a Specialist Header if applicable.
+- **Routing:** When executing a workflow, load the governing `SKILL.md` from its designated skills folder (e.g., `~/.gemini/antigravity/skills/product/SKILL.md`) and adhere to its persona constraints. Prefix responses with a Specialist Header if applicable.
 - **Implementation:** No code changes until "Consensus Reached."
 - **ADR Authority:** Run `/record-adr` for library changes, schema shifts, or >5 file impacts. 
 - **ADR as Context:** Always search `./docs/architectural-decisions/` via `jDocMunch` before refactoring. Respect past decisions unless explicitly superseded.
 
 ## 🛠 Workflow Exclusivity (Anti-Bypass)
-- **Standardized Execution:** You are **PROHIBITED** from running `scripts/lint.sh`, `scripts/test.sh`, or `scripts/run.sh` directly via bash/shell. 
+- **Standardized Execution:** You are **PROHIBITED** from running `./scripts/lint.sh`, `./scripts/test.sh`, or `./scripts/run.sh` directly via bash/shell. 
 - **Mandatory Path:** You MUST use the designated workflows to ensure proper logging and error-trapping:
   - Use **`/lint`** for all linting/formatting.
   - Use **`/test [paths]`** for all testing and coverage.

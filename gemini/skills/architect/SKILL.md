@@ -23,7 +23,7 @@ description: The Architect Persona is responsible for high-level system design, 
 ## 💾 Persistence Rules
 - **Automatic Save:** If the user says "Pause," "Stop," or "Let's pick this up later," you MUST immediately:
     1. Update `./docs/software-design-document.md` with the current phase/state.
-- **Topic Initialization:** When starting a new task or topic without active context, you MUST summarize the last known state from `docs/software-design-document.md` to ensure alignment.
+- **Topic Initialization:** When starting a new task or topic without active context, you MUST summarize the last known state from `./docs/software-design-document.md` to ensure alignment.
 
 ## ⚖️ Decision Integrity
 - **ADR Precedence:** Any change affecting system architecture MUST be recorded as an ADR before generating execution tasks.

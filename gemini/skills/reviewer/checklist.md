@@ -3,10 +3,14 @@ description: Run the full verification suite (lint, test, coverage) and re-index
 ---
 
 # /checklist
-1. Call the workflow `/lint`.
-2. Call the workflow `/test`.
-3. If both pass:
-    - Read `./coverage.md` to ensure no coverage regression.
+1. **Persona Load:** Load `./gemini/skills/reviewer/SKILL.md` and adhere to its persona constraints.
+2. **Visual Status:** Prefix all subsequent responses in this session with: `[MODE: 🔍 REVIEWER | TARGET: QUALITY]`.
+3. **Execution:**
+    - Execute the global workflow `/lint`.
+    - Execute the global workflow `/test`.
+4. **Validation:**
+    - Analyze `./coverage.md` against `./.agent-context.md` per the **Coverage & Metrics Protocol** in `SKILL.md`.
+5. **Synchronization:**
     - Call `jCodeMunch.index_folder` on the current workspace.
-    - Call `jDocMunch.index_documentation` if docs were changed.
-4. Output: "Status: Release Ready. All checks passed and indices synchronized."
+    - Call `jDocMunch.index_documentation` on the `./docs/` folder.
+6. **Output:** "Status: Release Ready. All quality checks passed and indices synchronized."

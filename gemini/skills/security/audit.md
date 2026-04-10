@@ -2,8 +2,12 @@
 description: Run an adversarial security audit on a specific module.
 ---
 # /audit {{module}}
-1. **Persona Load:** Read `~/.gemini/rules/role_security.md` via `jDocMunch`.
-2. **Visual Status:** Prefix all subsequent responses in this session with: `[MODE: 🛡️ SECURITY AUDIT | TARGET: {{module}}]`.
-3. **Analyze:** Scan {{module}} for OWASP vulnerabilities and logic flaws.
-4. **Report:** Provide a "Threat Report" with remediation steps.
+1. **Persona Load:** Load `~/.gemini/antigravity/skills/security/SKILL.md` and adhere to its persona constraints.
+2. **Visual Status:** Prefix all subsequent responses in this session with: `[MODE: 🛡️ SECURITY | TARGET: {{module}}]`.
+3. **Analyze:** Scan `{{module}}` for vulnerabilities, logic flaws, and hardcoded secrets using the **Core Responsibilities** in `SKILL.md`.
+4. **Report:** 
+    - Create a structured report based on the `~/.gemini/antigravity/skills/security/resources/security-audit.md` template.
+    - Write the report to `./docs/security/audit-[module]-[timestamp].md`.
+    - Provide a summary of the "Risk Level" and critical findings in the chat.
+5. **Closure:** Call the workflow `/ready` to finalize the audit task.
 
