@@ -4,7 +4,7 @@
 1. **Sync:** Run `jCodeMunch.resolve_repo` and read `./.agent-context.md`.
 2. **ACK:** Briefly summarize the "Current Mission" and "Known Gotchas".
 3. **Workflow Discovery (MANDATORY):** You MUST run `./scripts/read-workflows.sh` at the start of every session. 
-4. **Workflow Usage (MANDATORY):** If a slash command or workflow (e.g., /test, /ready) is relevant, you are strictly forbidden from executing any terminal command until you have first called view_file on that workflow's .md file.
+4. **Workflow Usage (MANDATORY):** If a slash command or workflow (e.g., /test, /lint) is relevant, you are strictly forbidden from executing any terminal command until you have first called view_file on that workflow's .md file.
 5. **Wait:** If Active Task is NONE in .agent-context.md, you must wait for a plan approval or a /start-mission trigger before modifying source code.
 6. **Enforcement:** You are STRICTLY PROHIBITED from executing any `.sh` script manually if a corresponding `.md` workflow exists. You MUST follow the workflow steps EXACTLY.
 
@@ -37,7 +37,7 @@
 
 ## ✅ Completion Protocol
 - **Unit Completion (DoD):** A `task-XXXX.md` is complete ONLY when the Reviewer moves it to `./docs/backlog/done/`.
-- **Mission Completion:** You must successfully complete the **`/ready`** workflow before declaring any major task or mission finished.
+- **Mission Completion:** Only the Reviewer persona can declare a task finished by executing its innate Graduation Protocol.
 
 ## 📋 Backlog & Units of Work
 1. **Source:** All work originates from the Architect as discrete `task-XXXX.md` files in `./docs/backlog/`.

@@ -89,10 +89,9 @@ if [ ! -f "../.ai_config_root.sh" ]; then
 fi
 
 cd scripts
-
 for script in "${SOURCE_DIR}/scripts/"*.sh; do
     BASE_SCRIPT="$(basename "$script")"
-    if [ -e "$BASE_SCRIPT" ]; then
+    if [ -e "$BASE_SCRIPT" ] || [ -l "$BASE_SCRIPT" ]; then
         rm -f "$BASE_SCRIPT"
     fi
     ln "$script"

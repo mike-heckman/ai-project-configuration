@@ -71,15 +71,15 @@ cp -a "${SOURCE_DIR}/.gitignore" .gitignore
 # Get the AI-Config root directory since SOURCE_DIR points directly to languages/python/
 ROOT_DIR=$(dirname "$(dirname "$SOURCE_DIR")")
 
+# 9. Provide global pointer
 if [ ! -f "../.ai_config_root.sh" ]; then
     echo "export AI_CONFIG_ROOT=\"${ROOT_DIR}\"" > ../.ai_config_root.sh
 fi
 
 cd scripts
-
 for script in "${SOURCE_DIR}/scripts/"*.sh; do
     BASE_SCRIPT="$(basename "$script")"
-    if [ -e "$BASE_SCRIPT" ]; then
+    if [ -e "$BASE_SCRIPT" ] || [ -l "$BASE_SCRIPT" ]; then
         rm -f "$BASE_SCRIPT"
     fi
     ln "$script"
@@ -87,7 +87,7 @@ for script in "${SOURCE_DIR}/scripts/"*.sh; do
 done
 cd ..
 
-# 9. Create document directories
+# 10. Create document directories
 for doc in "${SOURCE_DIR}/docs/"*; do
     local_doc="$(basename "$doc")"
     if [ ! -d "docs/${local_doc}" ]; then
@@ -95,11 +95,11 @@ for doc in "${SOURCE_DIR}/docs/"*; do
     fi
 done
 
-# 10. Initial formatting pass
+# 11. Initial formatting pass
 echo "Applying initial formatting..."
 scripts/lint.sh > /dev/null 2>&1 || true
 
-# 11. Register project for global updates
+# 12. Register project for global updates
 REGISTRY_DIR="${HOME}/.gemini/registered"
 mkdir -p "$REGISTRY_DIR"
 REGISTRY_FILE="${REGISTRY_DIR}/python_locations.conf"

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# NOTE: This script is hard-linked via the ai-project-configuration/_setup.sh script. 
-# Edits to this file should be made in that location to ensure that edits are 
-# intentionally applied to the project template and not just the test script.
-# Last edit: 2026-04-02 by Mike
+# NOTE: This script is hard-linked to the ai-project-configuration/scripts/lint.sh script. 
+# Do not modify this file. If an override is needed, create a _local_lint.sh
+# script in the same directory with the desired changes. 
+# Last edit: 2026-04-10 by Mike
 #
 
 set -e
@@ -29,8 +29,8 @@ get_project_root() {
     echo "$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 }
 
-# Final resolution
-PROJECT_ROOT="${PROJECT_ROOT:-${VSCODE_CWD:-$(get_project_root "$PWD")}}"
+# Use script directory as the starting point for root discovery to ensure it works even if run from a different CWD.
+PROJECT_ROOT="$(get_project_root "$PWD")"
 
 # Defines the install location of the project template, which is used for sourcing shared functions and configs.
 source "${PROJECT_ROOT}/../.ai_config_root.sh"

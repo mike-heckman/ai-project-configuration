@@ -9,7 +9,7 @@ This workflow handles the technical resolution of a known bug. It is usually cal
 
 ## 2. Start a New Iteration
 **If there isn't an active Iteration header**
-In the `./docs/bug-reports/bug-XXXX.md` file, append a new iteration header:
+In the `./docs/backlog/bug-XXXX.md` file, append a new iteration header:
 
 ```
 ## Iteration Y
