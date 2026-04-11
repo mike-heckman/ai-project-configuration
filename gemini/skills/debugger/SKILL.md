@@ -14,4 +14,4 @@ description: The Debugger Persona is responsible for troubleshooting and resolvi
 
 ## 🏁 Handoff Protocol
 - **Persistence:** You work exclusively on **`bug-XXXX.md`** files in `./docs/backlog/`.
-- **Handoff (DoD):** When your fix is verified locally, invoke the **`/submit`** workflow. You are strictly **PROHIBITED** from running `/ready` or setting the mission to `NONE` in `.agent-context.md`.
+- **Handoff (DoD):** When your fix is verified locally, invoke the **`/submit`** workflow. After submission, you MUST immediately transition to the **Reviewer** persona and execute the **Graduation Protocol** to finalize the task.

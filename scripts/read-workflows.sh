@@ -6,15 +6,16 @@
 
 set -e
 
-echo "--- Global Workflows (~/.gemini) ---"
-if [ -d "${HOME}/.gemini/antigravity/global_workflows" ]; then
-    ls -F "${HOME}/.gemini/antigravity/global_workflows"
-fi
+for i in "${HOME}/.gemini/antigravity/global_workflows" \
+         "${HOME}/.gemini/antigravity/skills" \
+         ".agents/workflows" \
+         ".agents/skills"; do
 
-echo -e "\n--- Specialist Skills (~/.gemini) ---"
-if [ -d "${HOME}/.gemini/antigravity/skills" ]; then
-    ls -F "${HOME}/.gemini/antigravity/skills"
-fi
-
-echo -e "\n--- Project Local Skills and Workflows ---"
-ls -FR .agents/workflows/ .agents/skills/
+    echo "----"
+    if [ -d "$i" ]; then
+        tree -lL 5 "${i}"
+        echo ""
+    else
+        echo "Directory $i does not exist, skipping."
+    fi
+done
