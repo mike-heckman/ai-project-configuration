@@ -3,7 +3,7 @@
 
 set -e
 
-REGISTRY_DIR="${HOME}/.gemini/registered"
+REGISTRY_DIR="${HOME}/.agents/registered"
 SCRIPT_DIR=$(dirname "$(realpath "$0")")
 
 if [ ! -d "$REGISTRY_DIR" ]; then

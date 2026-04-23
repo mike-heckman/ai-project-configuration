@@ -33,8 +33,16 @@ mkdir -p scripts src tests logs temp docs/architecture-decisions docs/backlog/do
 
 # 2. Add document templates if they don't exist
 cd docs
-for doc in "${SCRIPT_DIR}/../gemini/document-templates/"*; do
+for doc in "${SCRIPT_DIR}/../agents/templates/"*; do
+    # Skip non-markdown docs for the docs folder (like Dockerfiles)
+    if [[ "$doc" != *.md ]]; then
+        continue
+    fi
+    # Also skip CLAUDE.md and cheat-sheet.md here as they belong elsewhere
     BASE_DOC="$(basename "$doc")"
+    if [ "$BASE_DOC" = "CLAUDE.md" ] || [ "$BASE_DOC" = "cheat-sheet.md" ]; then
+        continue
+    fi
     if [ ! -f "${BASE_DOC}" ]; then
         cp -a "$doc" "${BASE_DOC}"
     fi
@@ -58,6 +66,17 @@ uv add --dev ruff pytest "pytest-cov>=6.3.0" pyright
 # 5. Create the .agent-context.md file if it doesn't exist
 if [ ! -f ".agent-context.md" ]; then
     cp -a "${SOURCE_DIR}/.agent-context.md" .agent-context.md
+fi
+
+# 5.5 Inject Claude Code integration files
+if [ ! -f "CLAUDE.md" ]; then
+    cp -a "${SCRIPT_DIR}/../agents/templates/CLAUDE.md" CLAUDE.md
+fi
+if [ ! -f "Dockerfile.agent" ]; then
+    cp -a "${SCRIPT_DIR}/../agents/templates/Dockerfile.agent" Dockerfile.agent
+fi
+if [ ! -f "docker-compose.agent.yml" ]; then
+    cp -a "${SCRIPT_DIR}/../agents/templates/docker-compose.agent.yml" docker-compose.agent.yml
 fi
 
 # 6. Install pre-commit and set up the git hook
@@ -100,7 +119,7 @@ echo "Applying initial formatting..."
 scripts/lint.sh > /dev/null 2>&1 || true
 
 # 12. Register project for global updates
-REGISTRY_DIR="${HOME}/.gemini/registered"
+REGISTRY_DIR="${HOME}/.agents/registered"
 mkdir -p "$REGISTRY_DIR"
 REGISTRY_FILE="${REGISTRY_DIR}/python_locations.conf"
 PROJECT_PATH=$(pwd)

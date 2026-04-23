@@ -2,50 +2,43 @@
 
 set -e
 
-SOURCE_DIR="$(dirname $(realpath $(dirname "$0")))/gemini"
-GEMINI_DIR="$(realpath ${HOME}/.gemini)" 
+SOURCE_DIR="$(dirname $(realpath $(dirname "$0")))/agents"
+AGENTS_DIR="$(realpath ${HOME}/.agents)" 
 
 if [ ! -d "$SOURCE_DIR" ]; then
-    echo "No existing Gemini source directory found at $SOURCE_DIR. Aborting!"
+    echo "No existing Agents source directory found at $SOURCE_DIR. Aborting!"
     exit 1
 fi
 
 ##
-## Setup Gemini/Antigravity rules and workflows
+## Setup Agents rules and workflows
 ##
 
-# Link global rules for Gemini
-if [ ! -d "${GEMINI_DIR}" ]; then
-    mkdir -p "${GEMINI_DIR}"
+# Link global rules for Agents
+if [ ! -d "${AGENTS_DIR}" ]; then
+    mkdir -p "${AGENTS_DIR}"
 fi
 
-# Conditional rules
-if [ -d "${GEMINI_DIR}/rules" ]; then
-    echo "Existing Gemini rules directory found, removing..."
-    rm -rf "${GEMINI_DIR}/rules"
+# Rules
+if [ -d "${AGENTS_DIR}/rules" ]; then
+    echo "Existing Agents rules directory found, removing..."
+    rm -rf "${AGENTS_DIR}/rules"
 fi
-ln -sf "${SOURCE_DIR}/conditional-rules" "${GEMINI_DIR}/rules"
-
-# Global rules
-if [ -f "${GEMINI_DIR}/GEMINI.md" ]; then
-    echo "Existing global Gemini rules file found, removing..."
-    rm -f "${GEMINI_DIR}/GEMINI.md"
-fi
-ln -sf "${SOURCE_DIR}/global-rules.md" "${GEMINI_DIR}/GEMINI.md"
+ln -sf "${SOURCE_DIR}/rules" "${AGENTS_DIR}/rules"
 
 # Workflows & Skills
-WORKFLOWS_DIR="${GEMINI_DIR}/antigravity/global_workflows"
+WORKFLOWS_DIR="${AGENTS_DIR}/workflows"
 if [ ! -d "${WORKFLOWS_DIR}" ]; then
     mkdir -p "${WORKFLOWS_DIR}"
 fi
 
 # Hardlink global baseline workflows
-if [ -d "${SOURCE_DIR}/global-workflows" ]; then
-    for workflow in "${SOURCE_DIR}/global-workflows/"*.md; do
+if [ -d "${SOURCE_DIR}/workflows" ]; then
+    for workflow in "${SOURCE_DIR}/workflows/"*.md; do
         [ -e "$workflow" ] || continue
         BASE_WORKFLOW="$(basename "$workflow")"
         if [ -f "${WORKFLOWS_DIR}/${BASE_WORKFLOW}" ]; then
-            echo "Existing Gemini workflow ${BASE_WORKFLOW} found, removing..."
+            echo "Existing Agent workflow ${BASE_WORKFLOW} found, removing..."
             rm -f "${WORKFLOWS_DIR}/${BASE_WORKFLOW}"
         fi
         ln -f "$workflow" "${WORKFLOWS_DIR}/${BASE_WORKFLOW}"
@@ -53,7 +46,7 @@ if [ -d "${SOURCE_DIR}/global-workflows" ]; then
 fi
 
 # Hardlink nested skill workflows
-SKILLS_DIR="${GEMINI_DIR}/antigravity/skills"
+SKILLS_DIR="${AGENTS_DIR}/skills"
 if [ ! -d "${SKILLS_DIR}" ]; then
     mkdir -p "${SKILLS_DIR}"
 fi
@@ -63,30 +56,39 @@ if [ -d "${SOURCE_DIR}/skills" ]; then
         [ -d "$skill" ] || continue
         BASE_SKILL="$(basename "$skill")"
         if [ -d "${SKILLS_DIR}/${BASE_SKILL}" ] || [ -l "${SKILLS_DIR}/${BASE_SKILL}" ]; then
-            echo "Existing Gemini skill ${BASE_SKILL} found, removing..."
+            echo "Existing Agent skill ${BASE_SKILL} found, removing..."
             rm -rf "${SKILLS_DIR}/${BASE_SKILL}"
         fi
         ln -s "$skill" "${SKILLS_DIR}/${BASE_SKILL}"
     done
 fi
 
-echo "Gemini initialization complete. Global rules, workflows, and document templates are now linked to ${GEMINI_DIR}."
+# Templates
+if [ -d "${AGENTS_DIR}/templates" ]; then
+    echo "Existing Agents templates directory found, removing..."
+    rm -rf "${AGENTS_DIR}/templates"
+fi
+ln -sf "${SOURCE_DIR}/templates" "${AGENTS_DIR}/templates"
+
+echo "Agents initialization complete. Global rules, workflows, and document templates are now linked to ${AGENTS_DIR}."
 
 # Cheatsheet
-CHEATSHEET_SOURCE="${SOURCE_DIR}/cheat-sheet.md"
-CHEATSHEET_DEST="${GEMINI_DIR}/cheat-sheet.md"
+CHEATSHEET_SOURCE="${SOURCE_DIR}/templates/cheat-sheet.md"
+CHEATSHEET_DEST="${AGENTS_DIR}/cheat-sheet.md"
 if [ -f "${CHEATSHEET_DEST}" ]; then
-    echo "Existing Gemini cheat sheet found, removing..."
+    echo "Existing Agent cheat sheet found, removing..."
     rm -f "${CHEATSHEET_DEST}"
 fi
-ln -sf "${CHEATSHEET_SOURCE}" "${CHEATSHEET_DEST}"
+if [ -f "${CHEATSHEET_SOURCE}" ]; then
+    ln -sf "${CHEATSHEET_SOURCE}" "${CHEATSHEET_DEST}"
+fi
 
 ##
 ## Setup git global ignore
 ##
 
 # Using \n for newlines in the payload
-PAYLOAD="logs/\ntemp/\npublic-dev/\nextract/\nextract"
+PAYLOAD="logs/\ntemp/\npublic-dev/\nextract/\n.claude/"
 
 # 1. Get the path
 GLOBAL_IGNORE=$(git config --get core.excludesfile)

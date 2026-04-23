@@ -9,7 +9,7 @@ set -o pipefail
 
 if [ -x scripts/_local_lint.sh ]; then
     echo "Running local override script..."
-    exec scripts/_local_lint.sh
+    exec scripts/_local_lint.sh "$@"
 fi
 
 get_project_root() {

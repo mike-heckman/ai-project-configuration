@@ -3,8 +3,8 @@
 ## 🏁 Session Initialization
 1. **Sync:** Run `jCodeMunch.resolve_repo` and read `./.agent-context.md`.
 2. **ACK:** Briefly summarize the "Current Mission" and "Known Gotchas".
-3. **Workflow Discovery (MANDATORY):** You MUST run `./scripts/read-workflows.sh` at the start of every session. 
-4. **Workflow Usage (MANDATORY):** If a slash command or workflow (e.g., /test, /lint) is relevant, you are strictly forbidden from executing any terminal command until you have first called view_file on that workflow's .md file.
+3. **Workflow Discovery (MANDATORY):** You MUST run `./scripts/read-workflows.sh` at the start of every session. If any files are newer on disk than in jDocMunch, re-index the files.
+4. **Workflow Usage (MANDATORY):** If a slash command or workflow (e.g., /test, /lint) is relevant, you are strictly forbidden from executing any terminal command until you have first called used jDocMunch to read that workflow's .md file.
 5. **Wait:** If Active Task is NONE in .agent-context.md, you must wait for a plan approval or a /start-mission trigger before modifying source code.
 6. **Enforcement:** You are STRICTLY PROHIBITED from executing any `.sh` script manually if a corresponding `.md` workflow exists. You MUST follow the workflow steps EXACTLY.
 
@@ -15,7 +15,8 @@
 - **Standard:** Use `query_knowledge_base` (Global scope) for architectural alignment.
 
 ## 🧠 Specialist & ADR Protocol
-- **Routing:** When executing a workflow, load the governing `SKILL.md` from its designated skills folder (e.g., `~/.gemini/antigravity/skills/product/SKILL.md`) and adhere to its persona constraints. Prefix responses with a Specialist Header if applicable.
+- **Routing:** When executing a workflow, load the governing `SKILL.md` from its designated skills folder (e.g., `~/.agents/skills/product/SKILL.md`) and adhere to its persona constraints. Prefix responses with a Specialist Header if applicable.
+- **Claude Code Handoff:** Implementation personas (Coder, Debugger) are strictly deferred to Claude Code. If you are Gemini, do not write implementation code; instruct the user to trigger Claude Code for the active task.
 - **Implementation:** No code changes until "Consensus Reached."
 - **ADR Authority:** Run `/record-adr` for library changes, schema shifts, or >5 file impacts. 
 - **ADR as Context:** Always search `./docs/architectural-decisions/` via `jDocMunch` before refactoring. Respect past decisions unless explicitly superseded.
@@ -26,7 +27,7 @@
   - Use **`/lint`** for all linting/formatting.
   - Use **`/test [paths]`** for all testing and coverage.
   - Use **`/run`** for local testing mode.
-- **Python:** Follow `~/.gemini/rules/lang_python.md`.
+- **Python:** Follow `~/.agents/rules/lang_python.md`.
 
 ## 📐 Coding & Git
 - **Naming:** Domain-specific only. Use `[resource]_id` and verb-prefixed booleans (e.g., `is_valid`).
