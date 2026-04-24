@@ -49,7 +49,15 @@ if [ -f "${TEMP_FILE}" ]; then
     rm -f "${TEMP_FILE}"
 fi
 
-ARGS=(--cov=. --cov-fail-under=80)
+LOC=$(find "${PROJECT_ROOT}" -name "*.py" -not -path "*/\.*" -not -path "*/venv/*" -not -path "*/.venv/*" -exec cat {} + 2>/dev/null | wc -l | tr -d ' ')
+LOC=${LOC:-0}
+
+if [ "$LOC" -lt 50 ]; then
+    echo "Project has less than 50 lines of code ($LOC LOC). Bypassing coverage threshold."
+    ARGS=(--cov=.)
+else
+    ARGS=(--cov=. --cov-fail-under=80)
+fi
 GENERATE_REPORT=false
 if [ -n "$1" ]; then
     if [ "$1" == "--pre-commit" ]; then

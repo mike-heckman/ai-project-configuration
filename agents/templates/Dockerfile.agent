@@ -22,7 +22,9 @@ RUN mkdir -p /home/${USERNAME}/.npm-global /workspace && \
 USER ${USERNAME}
 
 # Install Opencode and MCP servers globally as the non-root user
-RUN npm install -g opencode-ai jcodemunch-mcp jdocmunch-mcp
+RUN npm install -g opencode-ai
+
+RUN pip3 install jcodemunch jdocmunch
 
 # Set up the working directory
 WORKDIR /workspace

@@ -44,10 +44,10 @@ if [ "$TARGET_DIR" != "." ]; then
     cd "$TARGET_DIR"
 fi
 
-# Safety checks
+# Safety checks - DO NOT RUN if you are not sure about the current directory or if it contains important files!
 if [ ! -d ".git" ]; then
-    echo "Warning: .git directory not found. Initializing git repository..."
-    git init
+    echo "Warning: .git directory not found. Aborting..."
+    exit 1
 fi
 
 # Get the scripts' location to find the source template
