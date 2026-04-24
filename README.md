@@ -4,7 +4,7 @@ An infrastructure and configuration repository designed to establish a standardi
 
 This repository enforces a **Hybrid Agent Architecture**:
 - **Gemini (Antigravity)** handles high-level Architecture, Product, and Security audits.
-- **Claude Code (Dockerized Local Agent)** handles low-level Coder and Debugger implementation using a local Gemma4 model.
+- **Opencode (Dockerized Local Agent)** handles low-level Coder and Debugger implementation using a local Gemma4 model.
 
 ## 🎯 Project Purpose
 
@@ -15,7 +15,7 @@ This repository enforces a **Hybrid Agent Architecture**:
 ## ⚠️ System Requirements
 
 - **OS**: Ubuntu or Linux Mint. *(Execution on Windows environments is unsupported and expected to be non-functional).*
-- **Dependencies**: bash, git, Docker (for Claude Code). Python bootstrapping requires `uv`.
+- **Dependencies**: bash, git, Docker (for Opencode). Python bootstrapping requires `uv`.
 
 ## 🚀 Getting Started
 
@@ -31,7 +31,7 @@ After cloning or bringing down an update for this repository, bootstrap your loc
 - Soft-links `global-rules.md`, conditional language rules, and specialized agent personas into `~/.agents/`.
 - Registers standardized AI workflows into `~/.agents/workflows/`.
 - Installs document templates and the global `cheat-sheet.md`.
-- Automatically configures your global Git ignores (`~/.config/git/ignore`) to properly exclude ephemeral AI directories (e.g., `temp/`, `logs/`, `.claude/`).
+- Automatically configures your global Git ignores (`~/.config/git/ignore`) to properly exclude ephemeral AI directories (e.g., `temp/`, `logs/`, `.opencode/`).
 
 ### 2. Scaffold a New Project (Python)
 
@@ -46,7 +46,7 @@ To bootstrap or update an existing Python repository with strict configuration s
 - Initializes a greenfield Python 3.14 project using `uv` if `pyproject.toml` is absent.
 - Links standard scripts (like `lint.sh`, `test.sh`) to enforce pipeline integrity via shared logic.
 - Injects a baseline `.agent-context.md`.
-- Injects a `CLAUDE.md`, `Dockerfile.agent`, and `docker-compose.agent.yml` to immediately boot Claude Code in Coder/Debugger mode.
+- Injects a `OPENCODE.md`, `Dockerfile.agent`, and `docker-compose.agent.yml` to immediately boot Opencode in Coder/Debugger mode.
 - Sets up Git pre-commit hooks and testing dependencies (`ruff`, `pytest`, `pyright`).
 
 ## 📂 Core Architecture
@@ -57,7 +57,7 @@ The brain of the operation. Contains the directives fed to AI agents.
 - **`workflows/`**: Specialized operation routines like `/audit`, `/design`, `/test`, `/ready`.
 - **`rules/conditional-rules/`**: Language-specific constraints (e.g., `lang_python.md`, `lang_typescript.md`).
 - **`skills/`**: Behavioral specialist personas (`coder.md`, `debugger.md`, `architect.md`).
-- **`templates/`**: Boilerplates for Architecture Decision Records (ADRs), context files, and Docker setups for Claude Code.
+- **`templates/`**: Boilerplates for Architecture Decision Records (ADRs), context files, and Docker setups for Opencode.
 
 ### `scripts/`
 Execution utilities to bridge the gap between AI configuration and the actual operating system environment. 

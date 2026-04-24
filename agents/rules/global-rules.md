@@ -16,7 +16,7 @@
 
 ## 🧠 Specialist & ADR Protocol
 - **Routing:** When executing a workflow, load the governing `SKILL.md` from its designated skills folder (e.g., `~/.agents/skills/product/SKILL.md`) and adhere to its persona constraints. Prefix responses with a Specialist Header if applicable.
-- **Claude Code Handoff:** Implementation personas (Coder, Debugger) are strictly deferred to Claude Code. If you are Gemini, do not write implementation code; instruct the user to trigger Claude Code for the active task.
+- **Opencode Handoff:** Implementation personas (Coder, Debugger) are strictly deferred to Opencode. If you are Gemini, do not write implementation code; instruct the user to trigger Opencode for the active task.
 - **Implementation:** No code changes until "Consensus Reached."
 - **ADR Authority:** Run `/record-adr` for library changes, schema shifts, or >5 file impacts. 
 - **ADR as Context:** Always search `./docs/architectural-decisions/` via `jDocMunch` before refactoring. Respect past decisions unless explicitly superseded.

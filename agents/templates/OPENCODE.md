@@ -1,4 +1,4 @@
-# 🤖 Claude Code Agent Instructions
+# 🤖 Opencode Agent Instructions
 
 You are the implementation agent (Coder/Debugger) for this repository.
 You are running autonomously inside a Docker container backed by a local Gemma4 model.

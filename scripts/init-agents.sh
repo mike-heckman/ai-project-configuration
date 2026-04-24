@@ -24,7 +24,13 @@ if [ -d "${AGENTS_DIR}/rules" ]; then
     echo "Existing Agents rules directory found, removing..."
     rm -rf "${AGENTS_DIR}/rules"
 fi
-ln -sf "${SOURCE_DIR}/rules" "${AGENTS_DIR}/rules"
+mkdir -p "${AGENTS_DIR}/rules"
+if [ -d "${SOURCE_DIR}/rules" ]; then
+    for rule in "${SOURCE_DIR}/rules/"*; do
+        [ -e "$rule" ] || continue
+        ln -f "$rule" "${AGENTS_DIR}/rules/$(basename "$rule")"
+    done
+fi
 
 # Workflows & Skills
 WORKFLOWS_DIR="${AGENTS_DIR}/workflows"
@@ -45,7 +51,7 @@ if [ -d "${SOURCE_DIR}/workflows" ]; then
     done
 fi
 
-# Hardlink nested skill workflows
+# Hardlink nested skill workflows (using symlinks since they are directories)
 SKILLS_DIR="${AGENTS_DIR}/skills"
 if [ ! -d "${SKILLS_DIR}" ]; then
     mkdir -p "${SKILLS_DIR}"
@@ -68,9 +74,53 @@ if [ -d "${AGENTS_DIR}/templates" ]; then
     echo "Existing Agents templates directory found, removing..."
     rm -rf "${AGENTS_DIR}/templates"
 fi
-ln -sf "${SOURCE_DIR}/templates" "${AGENTS_DIR}/templates"
+mkdir -p "${AGENTS_DIR}/templates"
+if [ -d "${SOURCE_DIR}/templates" ]; then
+    for tpl in "${SOURCE_DIR}/templates/"*; do
+        [ -e "$tpl" ] || continue
+        # Don't hardlink subdirectories if there are any
+        if [ -f "$tpl" ]; then
+            ln -f "$tpl" "${AGENTS_DIR}/templates/$(basename "$tpl")"
+        fi
+    done
+fi
 
-echo "Agents initialization complete. Global rules, workflows, and document templates are now linked to ${AGENTS_DIR}."
+##
+## Setup Antigravity Links (for Gemini context)
+##
+GEMINI_DIR="${HOME}/.gemini"
+ANTIGRAVITY_DIR="${GEMINI_DIR}/antigravity"
+mkdir -p "${ANTIGRAVITY_DIR}"
+
+# Link global rules to GEMINI.md
+echo "Linking GEMINI.md..."
+rm -f "${GEMINI_DIR}/GEMINI.md"
+ln -f "${AGENTS_DIR}/rules/global-rules.md" "${GEMINI_DIR}/GEMINI.md"
+
+# Link conditional rules
+echo "Linking conditional rules to Antigravity..."
+rm -rf "${GEMINI_DIR}/rules"
+mkdir -p "${GEMINI_DIR}/rules"
+for rule in "${AGENTS_DIR}/rules/"*; do
+    [ -e "$rule" ] || continue
+    ln -f "$rule" "${GEMINI_DIR}/rules/$(basename "$rule")"
+done
+
+# Link global workflows to antigravity
+echo "Linking workflows to Antigravity..."
+rm -rf "${ANTIGRAVITY_DIR}/global_workflows"
+mkdir -p "${ANTIGRAVITY_DIR}/global_workflows"
+for wf in "${WORKFLOWS_DIR}/"*; do
+    [ -e "$wf" ] || continue
+    ln -f "$wf" "${ANTIGRAVITY_DIR}/global_workflows/$(basename "$wf")"
+done
+
+# Link skills to antigravity (symlinks because they are directories)
+echo "Linking skills to Antigravity..."
+rm -rf "${ANTIGRAVITY_DIR}/skills"
+ln -sf "${SKILLS_DIR}" "${ANTIGRAVITY_DIR}/skills"
+
+echo "Agents initialization complete. Global rules, workflows, and document templates are now linked to ${AGENTS_DIR} and Antigravity."
 
 # Cheatsheet
 CHEATSHEET_SOURCE="${SOURCE_DIR}/templates/cheat-sheet.md"
@@ -88,7 +138,7 @@ fi
 ##
 
 # Using \n for newlines in the payload
-PAYLOAD="logs/\ntemp/\npublic-dev/\nextract/\n.claude/"
+PAYLOAD="logs/\ntemp/\npublic-dev/\nextract/\n.opencode/"
 
 # 1. Get the path
 GLOBAL_IGNORE=$(git config --get core.excludesfile)

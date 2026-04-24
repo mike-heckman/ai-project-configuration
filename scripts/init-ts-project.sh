@@ -3,10 +3,45 @@
 
 set -e
 
+# Defaults
+PKG_MANAGER="pnpm"
+TARGET_DIR="."
+SKIP_HOOKS=false
+
+# Help message
+show_help() {
+    echo "Usage: init-ts-project.sh [options]"
+    echo ""
+    echo "Options:"
+    echo "  -m, --manager <pnpm|npm|yarn|bun> Set package manager (default: pnpm)"
+    echo "  -d, --dir <path>         Target directory (default: .)"
+    echo "  --no-hooks               Skip pre-commit hooks setup"
+    echo "  -h, --help               Show this help message and exit"
+    echo ""
+    exit 0
+}
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -m|--manager) PKG_MANAGER="$2"; shift 2 ;;
+        -d|--dir) TARGET_DIR="$2"; shift 2 ;;
+        --no-hooks) SKIP_HOOKS=true; shift ;;
+        -h|--help) show_help ;;
+        *) echo "Unknown option: $1"; show_help ;;
+    esac
+done
+
+# Handle target directory
+if [ "$TARGET_DIR" != "." ]; then
+    mkdir -p "$TARGET_DIR"
+    cd "$TARGET_DIR"
+fi
+
 # Safety checks
 if [ ! -d ".git" ]; then
-    echo "Error: .git directory not found. This script must be run at the root of a git repository."
-    exit 1
+    echo "Warning: .git directory not found. Initializing git repository..."
+    git init
 fi
 
 # Get the scripts' location to find the source template
@@ -38,9 +73,9 @@ for doc in "${SCRIPT_DIR}/../agents/templates/"*; do
     if [[ "$doc" != *.md ]]; then
         continue
     fi
-    # Also skip CLAUDE.md and cheat-sheet.md here as they belong elsewhere
+    # Also skip OPENCODE.md and cheat-sheet.md here as they belong elsewhere
     BASE_DOC="$(basename "$doc")"
-    if [ "$BASE_DOC" = "CLAUDE.md" ] || [ "$BASE_DOC" = "cheat-sheet.md" ]; then
+    if [ "$BASE_DOC" = "OPENCODE.md" ] || [ "$BASE_DOC" = "cheat-sheet.md" ]; then
         continue
     fi
     if [ ! -f "${BASE_DOC}" ]; then
@@ -51,13 +86,35 @@ cd ..
 
 # 3. Initialize package.json
 if [ "${FRESH_INSTALL}" = true ]; then
-    pnpm init
-    pnpm pkg set type="module"
+    if [ "$PKG_MANAGER" = "pnpm" ]; then
+        pnpm init
+        pnpm pkg set type="module"
+    elif [ "$PKG_MANAGER" = "npm" ]; then
+        npm init -y
+        npm pkg set type="module"
+    elif [ "$PKG_MANAGER" = "yarn" ]; then
+        yarn init -y
+        npm pkg set type="module"
+    elif [ "$PKG_MANAGER" = "bun" ]; then
+        bun init -y
+        npm pkg set type="module"
+    else
+        echo "Error: Unsupported package manager $PKG_MANAGER"
+        exit 1
+    fi
 fi
 
 # 4. Add development dependencies (matching standard stack)
-echo "Installing development tools..."
-pnpm add -D typescript eslint prettier vitest @eslint/js typescript-eslint globals @vitest/coverage-v8
+echo "Installing development tools using $PKG_MANAGER..."
+if [ "$PKG_MANAGER" = "pnpm" ]; then
+    pnpm add -D typescript eslint prettier vitest @eslint/js typescript-eslint globals @vitest/coverage-v8
+elif [ "$PKG_MANAGER" = "npm" ]; then
+    npm install -D typescript eslint prettier vitest @eslint/js typescript-eslint globals @vitest/coverage-v8
+elif [ "$PKG_MANAGER" = "yarn" ]; then
+    yarn add -D typescript eslint prettier vitest @eslint/js typescript-eslint globals @vitest/coverage-v8
+elif [ "$PKG_MANAGER" = "bun" ]; then
+    bun add -d typescript eslint prettier vitest @eslint/js typescript-eslint globals @vitest/coverage-v8
+fi
 
 # Copy configs
 if [ ! -f ".eslint.config.js" ]; then
@@ -75,9 +132,9 @@ if [ ! -f ".agent-context.md" ]; then
     cp -a "${SOURCE_DIR}/.agent-context.md" .agent-context.md
 fi
 
-# 5.5 Inject Claude Code integration files
-if [ ! -f "CLAUDE.md" ]; then
-    cp -a "${SCRIPT_DIR}/../agents/templates/CLAUDE.md" CLAUDE.md
+# 5.5 Inject Opencode integration files
+if [ ! -f "OPENCODE.md" ]; then
+    cp -a "${SCRIPT_DIR}/../agents/templates/OPENCODE.md" OPENCODE.md
 fi
 if [ ! -f "Dockerfile.agent" ]; then
     cp -a "${SCRIPT_DIR}/../agents/templates/Dockerfile.agent" Dockerfile.agent
@@ -87,11 +144,15 @@ if [ ! -f "docker-compose.agent.yml" ]; then
 fi
 
 # 6. Install pre-commit and set up the git hook
-if [ -x "${SOURCE_DIR}/git-pre-commit-hook.sh" ]; then
-  "${SOURCE_DIR}/git-pre-commit-hook.sh"
+if [ "$SKIP_HOOKS" = false ]; then
+    if [ -x "${SOURCE_DIR}/git-pre-commit-hook.sh" ]; then
+      "${SOURCE_DIR}/git-pre-commit-hook.sh"
+    else
+      # if not executable yet, run via bash
+      bash "${SOURCE_DIR}/git-pre-commit-hook.sh"
+    fi
 else
-  # if not executable yet, run via bash
-  bash "${SOURCE_DIR}/git-pre-commit-hook.sh"
+    echo "Skipping git pre-commit hook setup..."
 fi
 
 # 7. Setup .gitignore
@@ -109,6 +170,7 @@ fi
 
 cd scripts
 for script in "${SOURCE_DIR}/scripts/"*.sh; do
+    [ -e "$script" ] || continue
     BASE_SCRIPT="$(basename "$script")"
     if [ -e "$BASE_SCRIPT" ] || [ -L "$BASE_SCRIPT" ]; then
         rm -f "$BASE_SCRIPT"

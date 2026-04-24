@@ -32,8 +32,8 @@ ai-project-configuration/
 │   │   └── adapter.sh          # Handles ~/.gemini linking
 │   ├── cursor/
 │   │   └── adapter.sh          # Renders markdown into .cursor/rules/*.mdc
-│   ├── claude/
-│   │   └── adapter.sh          # Renders into clauderc or context files
+│   ├── opencode/
+│   │   └── adapter.sh          # Renders into opencode context files
 │   └── copilot/
 │       └── adapter.sh          # Concatenates rules for .github/copilot-instructions.md
 ├── scripts/
@@ -56,7 +56,7 @@ Not all agents understand rules in the same way. Your "adapters" will need to br
 *   **Antigravity/Gemini:** Can continue using the global `~/.gemini` directory structure. The adapter handles variable injection and symlinking.
 *   **Cursor:** Cursor relies on `.mdc` files in a `.cursor/rules/` directory per-project. Your `cursor/adapter.sh` would take the core workflows and skills, inject frontmatter constraints (e.g., `globs: *`, `description: ...`), and symlink them into the project workspace during the `init-py-project.sh` phase.
 *   **Copilot/Codex:** Expects heavily condensed instructions. The adapter might concatenate the most critical rules into a single `.github/copilot-instructions.md`.
-*   **Claude:** Using Claude Code, the adapter might orchestrate custom tools or generate a `.claude.json` configuration prioritizing specific workflows.
+*   **Opencode:** Using Opencode, the adapter might orchestrate custom tools or generate an `.opencode.json` configuration prioritizing specific workflows.
 
 #### C. Handling Multi-Agent Concurrency
 To allow a developer to use Cursor (for inline autocomplete and local editing) alongside Gemini (for heavy lifting/research/planning) on the same project:

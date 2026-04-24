@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  claude-agent:
+  opencode-agent:
     build:
       context: .
       dockerfile: Dockerfile.agent
@@ -13,8 +13,8 @@ services:
       - .:/workspace
       # Mount the global agent rules (read-only)
       - ~/.agents:/home/${USER}/.agents:ro
-      # Persist Claude configuration
-      - ~/.claude:/home/${USER}/.claude
+      # Persist Opencode configuration
+      - ~/.opencode:/home/${USER}/.opencode
     environment:
       # Route Anthropic API calls to a local proxy (like LiteLLM) pointing to Gemma4
       - ANTHROPIC_BASE_URL=${ANTHROPIC_BASE_URL:-http://host.docker.internal:4000}

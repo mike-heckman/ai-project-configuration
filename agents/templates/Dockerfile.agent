@@ -21,11 +21,11 @@ RUN mkdir -p /home/${USERNAME}/.npm-global /workspace && \
 # Switch to the non-root user
 USER ${USERNAME}
 
-# Install Claude Code and MCP servers globally as the non-root user
-RUN npm install -g @anthropic-ai/claude-code jcodemunch-mcp jdocmunch-mcp
+# Install Opencode and MCP servers globally as the non-root user
+RUN npm install -g opencode-ai jcodemunch-mcp jdocmunch-mcp
 
 # Set up the working directory
 WORKDIR /workspace
 
-# Default command to start claude
-CMD ["claude"]
+# Default command to start opencode
+CMD ["opencode"]
