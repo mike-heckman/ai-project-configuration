@@ -73,9 +73,9 @@ for doc in "${SCRIPT_DIR}/../agents/templates/"*; do
     if [[ "$doc" != *.md ]]; then
         continue
     fi
-    # Also skip OPENCODE.md and cheat-sheet.md here as they belong elsewhere
+    # Also skip AGENTS.md, OPENCODE.md and cheat-sheet.md here as they belong in the root or elsewhere
     BASE_DOC="$(basename "$doc")"
-    if [ "$BASE_DOC" = "OPENCODE.md" ] || [ "$BASE_DOC" = "cheat-sheet.md" ]; then
+    if [ "$BASE_DOC" = "AGENTS.md" ] || [ "$BASE_DOC" = "OPENCODE.md" ] || [ "$BASE_DOC" = "cheat-sheet.md" ]; then
         continue
     fi
     if [ ! -f "${BASE_DOC}" ]; then
@@ -133,14 +133,11 @@ if [ ! -f ".agent-context.md" ]; then
 fi
 
 # 5.5 Inject Opencode integration files
+if [ ! -f "AGENTS.md" ]; then
+    cp -a "${SCRIPT_DIR}/../agents/templates/AGENTS.md" AGENTS.md
+fi
 if [ ! -f "OPENCODE.md" ]; then
     cp -a "${SCRIPT_DIR}/../agents/templates/OPENCODE.md" OPENCODE.md
-fi
-if [ ! -f "Dockerfile.agent" ]; then
-    cp -a "${SCRIPT_DIR}/../agents/templates/Dockerfile.agent" Dockerfile.agent
-fi
-if [ ! -f "docker-compose.agent.yml" ]; then
-    cp -a "${SCRIPT_DIR}/../agents/templates/docker-compose.agent.yml" docker-compose.agent.yml
 fi
 
 # 6. Install pre-commit and set up the git hook

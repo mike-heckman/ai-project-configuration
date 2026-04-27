@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "jcodemunch": {
+      "command": "uvx",
+      "args": [
+        "jcodemunch-mcp"
+      ],
+      "env": {
+        "JCODEMUNCH_SHARE_SAVINGS": "0",
+        "JCODEMUNCH_DISABLED_TOOLS": "index_file,search_columns,get_ranked_context,find_importers,find_references,check_references,get_related_symbols,get_call_hierarchy,check_rename_safe,get_changed_symbols,get_symbol_provenance,get_symbol_complexity,get_churn_rate,find_dead_code,get_dead_code_v2,get_untested_symbols,search_ast,winnow_symbols,get_symbol_diff,embed_repo,plan_turn,get_session_context,get_session_snapshot,register_edit,get_session_stats,analyze_perf,tune_weights,check_embedding_drift,test_summarizer,set_tool_tier,announce_model"
+      }
+    },
+    "jdocmunch": {
+      "command": "uvx",
+      "args": [
+        "jdocmunch-mcp"
+      ],
+      "env": {
+        "JDOCMUNCH_SHARE_SAVINGS": "0",
+        "JDOCMUNCH_DISABLED_TOOLS": "index_local"
+      }
+    }
+  }
+}

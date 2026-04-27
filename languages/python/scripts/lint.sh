@@ -32,21 +32,9 @@ get_project_root() {
 # Use script directory as the starting point for root discovery to ensure it works even if run from a different CWD.
 PROJECT_ROOT="$(get_project_root "$PWD")"
 
-# Defines the install location of the project template, which is used for sourcing shared functions and configs.
-source "${PROJECT_ROOT}/../.ai_config_root.sh"
-
-# Copying the configuration to the project root allows it to be checked into git with the project.
+# Use local configuration files. These should be present in the project root.
 export RUFF_CONFIG="${PROJECT_ROOT}/.ruff-master-config.toml"
-export SOURCE_RUFF_CONFIG="${AI_CONFIG_ROOT}/languages/python/ruff-master-config.toml"
-if [ -f "$SOURCE_RUFF_CONFIG" ]; then
-    cp -a "$SOURCE_RUFF_CONFIG" "$RUFF_CONFIG"
-fi
-
 export PYRIGHT_CONFIG="${PROJECT_ROOT}/.pyrightconfig.json"
-export PYRIGHT_SOURCE_CONFIG="${AI_CONFIG_ROOT}/languages/python/pyright-master-config.json"
-if [ -f "$PYRIGHT_SOURCE_CONFIG" ]; then
-    cp -a "$PYRIGHT_SOURCE_CONFIG" "${PYRIGHT_CONFIG}"
-fi
 
 if [ ! -d "${PROJECT_ROOT}/logs" ]; then
     mkdir -p "${PROJECT_ROOT}/logs"

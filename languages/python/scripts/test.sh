@@ -6,6 +6,7 @@
 # Last edit: 2026-04-10 by Mike
 #
 set -e
+set -x
 
 if [ -x scripts/_local_test.sh ]; then
     echo "Running local override script..."
@@ -30,8 +31,6 @@ get_project_root() {
 # Use script directory as the starting point for root discovery to ensure it works even if run from a different CWD.
 PROJECT_ROOT="$(get_project_root "$PWD")"
 
-# Defines the install location of the project template, which is used for sourcing shared functions and configs.
-source "${PROJECT_ROOT}/../.ai_config_root.sh"
 
 # 1. Gather Metadata
 CURRENT_DATE=$(date +"%Y-%m-%d %H:%M:%S")

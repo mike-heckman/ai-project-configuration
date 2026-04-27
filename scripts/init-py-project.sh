@@ -3,8 +3,13 @@
 
 set -e
 
+# Avoid interference from active virtual environments and python pathing
+unset VIRTUAL_ENV
+unset PYTHONHOME
+unset PYTHONPATH
+
 # Defaults
-PYTHON_VERSION="3.14"
+PYTHON_VERSION="3.12"
 PROJECT_TYPE="app"
 FLAVOR="base"
 TARGET_DIR="."
@@ -79,9 +84,9 @@ for doc in "${SCRIPT_DIR}/../agents/templates/"*; do
     if [[ "$doc" != *.md ]]; then
         continue
     fi
-    # Also skip OPENCODE.md and cheat-sheet.md here as they belong elsewhere
+    # Also skip AGENTS.md, OPENCODE.md and cheat-sheet.md here as they belong in the root or elsewhere
     BASE_DOC="$(basename "$doc")"
-    if [ "$BASE_DOC" = "OPENCODE.md" ] || [ "$BASE_DOC" = "cheat-sheet.md" ]; then
+    if [ "$BASE_DOC" = "AGENTS.md" ] || [ "$BASE_DOC" = "OPENCODE.md" ] || [ "$BASE_DOC" = "cheat-sheet.md" ]; then
         continue
     fi
     if [ ! -f "${BASE_DOC}" ]; then
@@ -103,7 +108,35 @@ elif grep -F "[tool.ruff" pyproject.toml > /dev/null; then
     echo "WARNING! Ruff configuration already exists in pyproject.toml, must removed manually!"
 fi
 
-# 4. Add development dependencies
+# Ensure pyproject.toml requirement matches our intended version
+if [ -f "pyproject.toml" ]; then
+    sed -i "s/requires-python = \".*\"/requires-python = \">=$PYTHON_VERSION\"/" pyproject.toml
+fi
+
+# Force uv to recognize this version as the project's primary version
+echo "Pinning project to Python $PYTHON_VERSION..."
+echo "$PYTHON_VERSION" > .python-version
+
+# 4. Ensure a clean, portable venv exists
+if [ -d ".venv" ]; then
+    echo "Refreshing virtual environment..."
+    rm -rf .venv
+fi
+
+echo "Ensuring Python $PYTHON_VERSION is installed..."
+uv python install "$PYTHON_VERSION"
+
+echo "Creating portable virtual environment using uv..."
+uv venv --python "$PYTHON_VERSION" .venv
+
+# Verify the venv is healthy and report version
+if ! .venv/bin/python3 --version; then
+    echo "Error: Virtual environment creation failed."
+    exit 1
+fi
+echo "Successfully created venv: $(.venv/bin/python3 --version)"
+
+# 5. Add development dependencies
 echo "Installing development tools..."
 uv add --dev ruff pytest "pytest-cov>=6.3.0" pyright
 
@@ -120,15 +153,17 @@ if [ ! -f ".agent-context.md" ]; then
     cp -a "${SOURCE_DIR}/.agent-context.md" .agent-context.md
 fi
 
+# 5.2 Copy master config files
+if [ ! -f ".ruff-master-config.toml" ]; then
+    cp -a "${SOURCE_DIR}/ruff-master-config.toml" .ruff-master-config.toml
+fi
+if [ ! -f ".pyrightconfig.json" ]; then
+    cp -a "${SOURCE_DIR}/pyright-master-config.json" .pyrightconfig.json
+fi
+
 # 5.5 Inject Opencode integration files
-if [ ! -f "OPENCODE.md" ]; then
-    cp -a "${SCRIPT_DIR}/../agents/templates/OPENCODE.md" OPENCODE.md
-fi
-if [ ! -f "Dockerfile.agent" ]; then
-    cp -a "${SCRIPT_DIR}/../agents/templates/Dockerfile.agent" Dockerfile.agent
-fi
-if [ ! -f "docker-compose.agent.yml" ]; then
-    cp -a "${SCRIPT_DIR}/../agents/templates/docker-compose.agent.yml" docker-compose.agent.yml
+if [ ! -f "AGENTS.md" ]; then
+    cp -a "${SCRIPT_DIR}/../agents/templates/AGENTS.md" AGENTS.md
 fi
 
 # 6. Install pre-commit and set up the git hook

@@ -49,15 +49,28 @@ To bootstrap or update an existing Python repository with strict configuration s
 - Injects a `OPENCODE.md`, `Dockerfile.agent`, and `docker-compose.agent.yml` to immediately boot Opencode in Coder/Debugger mode.
 - Sets up Git pre-commit hooks and testing dependencies (`ruff`, `pytest`, `pyright`).
 
+## 🧠 Hybrid KVM-Worker Architecture
+
+This project enforces a strict separation between high-level planning and autonomous implementation:
+
+*   **Planner (Host)**: Gemini (Antigravity) handles architecture, product strategy, and backlog scaffolding. Rules are located in `core-planner/`.
+*   **Worker (Incus VM)**: Claude Code executes implementation and debugging inside an isolated KVM. Rules are located in `core-worker/`.
+
+For a deep dive into the virtualization and orchestration layers, see [Hybrid KVM Architecture](docs/hybrid-kvm-architecture.md).
+
 ## 📂 Core Architecture
 
-### `agents/`
-The brain of the operation. Contains the directives fed to AI agents.
-- **`rules/global-rules.md`**: The strict overarching axioms for the AI (enforcing file modifications, code standards, workflow usage).
-- **`workflows/`**: Specialized operation routines like `/audit`, `/design`, `/test`, `/ready`.
-- **`rules/conditional-rules/`**: Language-specific constraints (e.g., `lang_python.md`, `lang_typescript.md`).
-- **`skills/`**: Behavioral specialist personas (`coder.md`, `debugger.md`, `architect.md`).
-- **`templates/`**: Boilerplates for Architecture Decision Records (ADRs), context files, and Docker setups for Opencode.
+### `core-planner/`
+The brain for host-side planning agents.
+- **`rules/`**: Strategic axioms (Architect, Product, Librarian).
+- **`workflows/`**: Strategic routines (`/design`, `/record-adr`).
+- **`skills/`**: Persona-specific constraints.
+
+### `core-worker/`
+The brain for implementation agents running inside KVM.
+- **`rules/`**: Coder and Debugger specific rules (e.g., `coder-rules.md`).
+- **`workflows/`**: Operational routines (`/lint`, `/test`, `/ready`).
+- **`kvm/`**: Guest-side initialization and mounting logic.
 
 ### `scripts/`
 Execution utilities to bridge the gap between AI configuration and the actual operating system environment. 

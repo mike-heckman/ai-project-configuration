@@ -1,0 +1,23 @@
+# AI Worker Environment Configuration
+# This file is sourced by the guest VM's .bashrc or init script.
+
+# --- Agent Configuration ---
+export ROLE="{{ROLE}}"
+export AGENT_NAME="Claude"
+export CORE_PATH="/home/mike/.agents/core-worker"
+export WORKFLOWS_DIR="${CORE_PATH}/workflows"
+export RULES_DIR="${CORE_PATH}/rules"
+export SKILLS_DIR="${CORE_PATH}/skills"
+
+# --- Workspace Configuration ---
+export WORKSPACE_ROOT="/workspace"
+export HOST_WORKSPACE_PATH="{{HOST_WORKSPACE_PATH}}"
+
+# --- LLM / Provider Configuration ---
+# export ANTHROPIC_API_KEY="sk-..."
+# export OPENAI_API_KEY="sk-..."
+# export LLM_BASE_URL="http://on-prem-llm:11434"
+
+# --- Tooling Configuration ---
+export UV_CACHE_DIR="/workspace/.uv_cache"
+export PATH="${PATH}:${HOME}/.local/bin"
