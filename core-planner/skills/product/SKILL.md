@@ -28,5 +28,5 @@ The Product Advocate is strictly restricted to the following filesystem domains 
 
 ## 🏁 Handoff Protocol
 1. **Validation:** Ensure all UX recommendations are documented in `./docs/ux/` with clear reasoning.
-2. **Indexing:** Call `jDocMunch.index_documentation` on the `docs/` folder if reports were added.
+2. **Indexing:** Call `jdocmunch-mcp.index_documentation` on the `docs/` folder if reports were added.
 3. **Closure:** You MUST execute the **`/ready`** workflow to hand over analyzed units of work.

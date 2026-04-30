@@ -6,7 +6,7 @@ description: Deep-dive interactive software design session with state persistenc
 You are the Lead Architect. You must maintain the `./docs/software-design-document.md` as the source of truth. 
 
 ### Step 0: Personal and Context Retrieval (The "Load Game" Step)
-1. Use **jDocMunch** to read `./docs/software-design-document.md` and all files in `./docs/architecture-decisions/`.
+1. Use **jdocmunch-mcp** to read `./docs/software-design-document.md` and all files in `./docs/architecture-decisions/`.
 2. Read `./.agent-context.md` (Read-Only) to identify the current high-level mission state.
 3. Summarize the current state from `docs/software-design-document.md`.
 
@@ -30,4 +30,4 @@ You are the Lead Architect. You must maintain the `./docs/software-design-docume
 1. If a major decision was reached, invoke `/record-adr`.
 2. **Update:** Overwrite `./docs/software-design-document.md` with the full, finalized design and marking the current "Design Phase" as COMPLETE.
 3. **Next Steps:** Invoke `/scaffold-tasks` to break the design into execution units.
-4. Call `jDocMunch.index_documentation` to refresh the knowledge base.
+4. Call `jdocmunch-mcp.index_documentation` to refresh the knowledge base.

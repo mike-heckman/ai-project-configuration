@@ -6,7 +6,7 @@ description: "Synchronizes README, Architecture docs, and ./.agent-context.md wi
 # 📚 Workflow: /update-docs
 
 ## 1. Delta Analysis
-- **Detect:** Use `jCodeMunch.get_repo_outline` and `get_file_outline` to identify new public APIs, modified modules, or changed signatures.
+- **Detect:** Use `jcodemunch-mcp.get_repo_outline` and `get_file_outline` to identify new public APIs, modified modules, or changed signatures.
 - **Scope:** Identify which `./docs/` files are impacted by these code deltas.
 
 ## 2. External & Internal Documentation
@@ -22,8 +22,8 @@ description: "Synchronizes README, Architecture docs, and ./.agent-context.md wi
 - **Discovery:** Record only NEW tribal knowledge (e.g., "Code requires `AUTH_METHOD=trust` for local dev").
 
 ## 4. MCP Synchronization
-- **Commit to Index:** Call `jDocMunch.index_documentation` on all modified `.md` files.
-- **Verification:** Briefly query `jDocMunch.query_knowledge_base` for one updated fact to confirm the index is hot.
+- **Commit to Index:** Call `jdocmunch-mcp.index_documentation` on all modified `.md` files.
+- **Verification:** Briefly query `jdocmunch-mcp.query_knowledge_base` for one updated fact to confirm the index is hot.
 
 ## 5. Summary
 - Report to the user: "Documentation synchronized and re-indexed."

@@ -1,0 +1,21 @@
+{
+  "providers": {
+    "ollama": {
+      "baseUrl": "http://100.117.201.1:11434/v1",
+      "api": "openai-completions",
+      "apiKey": "ollama",
+      "compat": {
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false
+      },
+      "models": [
+        {
+          "id": "gemma4:26b-a4b-it-q8-96k",
+          "name": "Gemma 4 26B (Local)",
+          "reasoning": false,
+          "contextWindow": 32768
+        }
+      ]
+    }
+  }
+}

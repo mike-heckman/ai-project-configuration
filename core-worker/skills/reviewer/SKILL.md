@@ -39,5 +39,5 @@ You are the guardian of the project's testing baseline.
 This innate protocol is executed by default when evaluating completed work.
 1. **Verification Phase:** Execute the global workflows `/lint` and `/test`, and check `./coverage.md` against thresholds (respecting the 50-line rule).
 2. **Branching & Correction:** If verification fails, update the `Active Task` in `.agent-context.md` to `REJECTED`, log the errors, and **re-adopt the Coder/Debugger persona immediately to resolve the issues.**
-3. **Sync Phase:** Target approved! Only AFTER successful verification and 100% pass, call `jCodeMunch.index_folder` and `jDocMunch.index_documentation`.
+3. **Sync Phase:** Target approved! Only AFTER successful verification and 100% pass, call `jcodemunch-mcp.index_folder` and `jdocmunch-mcp.index_documentation`.
 4. **Finalization Phase:** Run the global workflow `/clean`, move the task to `./docs/backlog/done/`, and **immediately promote the next task from the backlog to stay alive and continue the loop.**

@@ -3,7 +3,7 @@
 You are the autonomous implementation agent for this repository. Your mission is to clear the project backlog with high precision and zero manual intervention.
 
 ## 🏁 Startup & Autonomous Loop (Zero-Wait Policy)
-1. **Sync:** Run `jCodeMunch.resolve_repo` and read `./.agent-context.md`.
+1. **Sync:** Run `jcodemunch-mcp.resolve_repo` and read `./.agent-context.md`.
 2. **Scan:** Look for `task-*.md` or `bug-*.md` files in `./docs/backlog/`.
 3. **Initialize:** If `.agent-context.md` status is `DONE` or `WAITING`, promote the next lowest-numbered task/bug to `Active Task`.
 4. **Execute (Continuous Operation):**

@@ -3,8 +3,8 @@
 An infrastructure and configuration repository designed to establish a standardized, AI-aware development environment. This project centrally manages AI system rules, execution workflows, and boilerplate project templates, serving as the "source of truth" for AI agents running on your local machine. 
 
 This repository enforces a **Hybrid Agent Architecture**:
-- **Gemini (Antigravity)** handles high-level Architecture, Product, and Security audits.
-- **Opencode (Dockerized Local Agent)** handles low-level Coder and Debugger implementation using a local Gemma4 model.
+- **Gemini (Antigravity)** handles high-level Architecture, Product, and Security audits on the Host.
+- **Opencode (Worker)** handles low-level Coder and Debugger implementation inside an isolated **Incus KVM**.
 
 ## 🎯 Project Purpose
 
@@ -46,7 +46,6 @@ To bootstrap or update an existing Python repository with strict configuration s
 - Initializes a greenfield Python 3.14 project using `uv` if `pyproject.toml` is absent.
 - Links standard scripts (like `lint.sh`, `test.sh`) to enforce pipeline integrity via shared logic.
 - Injects a baseline `.agent-context.md`.
-- Injects a `OPENCODE.md`, `Dockerfile.agent`, and `docker-compose.agent.yml` to immediately boot Opencode in Coder/Debugger mode.
 - Sets up Git pre-commit hooks and testing dependencies (`ruff`, `pytest`, `pyright`).
 
 ## 🧠 Hybrid KVM-Worker Architecture
@@ -54,7 +53,7 @@ To bootstrap or update an existing Python repository with strict configuration s
 This project enforces a strict separation between high-level planning and autonomous implementation:
 
 *   **Planner (Host)**: Gemini (Antigravity) handles architecture, product strategy, and backlog scaffolding. Rules are located in `core-planner/`.
-*   **Worker (Incus VM)**: Claude Code executes implementation and debugging inside an isolated KVM. Rules are located in `core-worker/`.
+*   **Worker (Incus VM)**: Opencode executes implementation and debugging inside an isolated KVM. Rules are located in `core-worker/`.
 
 For a deep dive into the virtualization and orchestration layers, see [Hybrid KVM Architecture](docs/hybrid-kvm-architecture.md).
 

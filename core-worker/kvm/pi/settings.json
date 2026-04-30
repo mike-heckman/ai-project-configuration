@@ -1,0 +1,15 @@
+{
+  "defaultProvider": "ollama",
+  "defaultModel": "gemma4:26b-a4b-it-q8-96k",
+  "theme": "dark",
+  "compaction": {
+    "enabled": true,
+    "reserveTokens": 8192,
+    "keepRecentTokens": 10000
+  },
+  "retry": {
+    "enabled": true,
+    "maxRetries": 3
+  },
+  "lastChangelogVersion": "0.70.6"
+}

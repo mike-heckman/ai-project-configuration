@@ -7,8 +7,8 @@ activation: "glob_match(**/*.py, **/pyproject.toml)"
 # 🐍 Python Engineering Standards
 
 ## 🏁 Pre-flight & Context
-- **Sync:** Call `jCodeMunch.resolve_repo` before any code proposal to verify symbol maps.
-- **Local Standards:** Query `docs/coding-standards.md` via `jDocMunch` for project-specific overrides.
+- **Sync:** Call `jcodemunch-mcp.resolve_repo` before any code proposal to verify symbol maps.
+- **Local Standards:** Query `docs/coding-standards.md` via `jdocmunch-mcp` for project-specific overrides.
 
 ## 📦 Env & Dependencies (uv Only)
 - **Authority:** Use `uv` exclusively. `pip install` is **PROHIBITED**.

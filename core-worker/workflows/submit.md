@@ -15,7 +15,7 @@ on_intent: ["Submit for review", "Request review", "Handover to reviewer"]
 
 ## 2. Janitor & Sync
 - **Janitor:** Execute the **`/clean`** workflow to purge `./temp/`.
-- **Sync:** Call `jCodeMunch.index_file` on all modified source files.
+- **Sync:** Call `jcodemunch-mcp.index_file` on all modified source files.
 
 ## 3. Automatic Review Transition
 - **Continuous Integration:** You MUST now transition to the **Reviewer** persona to begin the Graduation Protocol.

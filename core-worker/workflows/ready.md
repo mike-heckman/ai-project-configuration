@@ -27,7 +27,7 @@ on_intent: ["Graduate task", "Task is ready", "Complete mission"]
   1. Execute **`/clean`** to purge `./temp/`.
   2. Move `./docs/backlog/{task_id}.md` to `./docs/backlog/done/`.
   3. Update `Last Known Coverage` in `.agent-context.md`.
-  4. Call `jCodeMunch.index_folder` to finalize the state.
+  4. Call `jcodemunch-mcp.index_folder` to finalize the state.
 
 ## 4. Loop Advancement
 - **Action:** 

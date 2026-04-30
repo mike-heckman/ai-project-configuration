@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "jcodemunch": {
+      "command": "uvx",
+      "args": [
+        "jcodemunch-mcp"
+      ],
+      "env": {
+        "JCODEMUNCH_SHARE_SAVINGS": "0"
+      }
+    },
+    "jdocmunch": {
+      "command": "uvx",
+      "args": [
+        "jdocmunch-mcp"
+      ],
+      "env": {
+        "JDOCMUNCH_SHARE_SAVINGS": "0",
+        "JDOCMUNCH_DISABLED_TOOLS": "get_toc_tree,get_document_outline,get_broken_links,get_doc_coverage"
+      }
+    }
+  }
+}

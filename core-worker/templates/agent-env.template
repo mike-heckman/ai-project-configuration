@@ -3,7 +3,7 @@
 
 # --- Agent Configuration ---
 export ROLE="{{ROLE}}"
-export AGENT_NAME="Claude"
+export AGENT_NAME="Opencode"
 export CORE_PATH="/home/mike/.agents/core-worker"
 export WORKFLOWS_DIR="${CORE_PATH}/workflows"
 export RULES_DIR="${CORE_PATH}/rules"

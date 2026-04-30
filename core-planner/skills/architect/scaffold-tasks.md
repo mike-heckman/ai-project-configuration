@@ -13,4 +13,4 @@ description: "Initializes a mission from the backlog once a plan is approved."
    - Populate the **Context**, **Implementation Plan**, and **Success Criteria** specifically for that unit.
 4. **Linking:** Cross-reference each task back to the source ADR or SDD section.
 5. **Confirmation:** List all created tasks to the user and explain the sequence of execution.
-6. **Sync:** After the user approves, call `jDocMunch.index_documentation` to ensure the decision is part of your permanent knowledge base
+6. **Sync:** After the user approves, call `jdocmunch-mcp.index_documentation` to ensure the decision is part of your permanent knowledge base

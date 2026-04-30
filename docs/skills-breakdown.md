@@ -25,37 +25,42 @@ The Debugger is reserved strictly for post-production or complex live-environmen
 
 ## Modular Skill Mapping
 
-Each of the following folders contains a core `SKILL.md` defining the persona, alongside its operational workflows:
+Skills are physically separated between the **Planner (Host)** and **Worker (KVM)** environments to ensure each agent has the appropriate ruleset for its role.
 
-**1. Architect Skills (`gemini/skills/architect/`)**
+### 🧠 Planner Skills (`core-planner/skills/`)
+These skills govern high-level strategy, architecture, and documentation maintenance on the host system.
+
+**1. Architect Skills (`core-planner/skills/architect/`)**
 * `SKILL.md` (Design governance rules)
 * `design.md`, `interact.md`, `record-adr.md`
 
-**2. Coder Skills (`gemini/skills/coder/`)**
+**2. Librarian Skills (`core-planner/skills/librarian/`)**
+* `SKILL.md` (Knowledge constraints)
+* `docs-audit.md`
+
+**3. Product Skills (`core-planner/skills/product/`)**
+* `SKILL.md` (UX/DX principles)
+* `ux.md`
+
+### 🛠️ Worker Skills (`core-worker/skills/`)
+These skills govern the implementation, testing, and debugging phases inside the isolated KVM.
+
+**1. Coder Skills (`core-worker/skills/coder/`)**
 * `SKILL.md` (Implementation constraints)
-* `start-mission.md`
 
-**3. Reviewer Skills (`gemini/skills/reviewer/`)**
+**2. Reviewer Skills (`core-worker/skills/reviewer/`)**
 * `SKILL.md` (QA gating rules)
-* `lint.md`, `test.md`, `run.md`, `ready.md`, `checklist.md`
+* Note: Global functional workflows like `lint`, `test`, and `ready` are located in `core-worker/workflows/`.
 
-**4. Debugger Skills (`gemini/skills/debugger/`)**
+**3. Debugger Skills (`core-worker/skills/debugger/`)**
 * `SKILL.md` (Diagnostic looping rules)
 * `bugfix.md`, `bug-iteration.md`
 
-**5. Librarian Skills (`gemini/skills/librarian/`)**
-* `SKILL.md` (Knowledge constraints)
-* `docs-audit.md`, `update-docs.md`
-
-**6. Performance Skills (`gemini/skills/performance/`)**
+**4. Performance Skills (`core-worker/skills/performance/`)**
 * `SKILL.md`
 * `scale.md`
 
-**7. Product Skills (`gemini/skills/product/`)**
-* `SKILL.md`
-* `ux.md`
-
-**8. Security Skills (`gemini/skills/security/`)**
+**5. Security Skills (`core-worker/skills/security/`)**
 * `SKILL.md`
 * `audit.md`
 

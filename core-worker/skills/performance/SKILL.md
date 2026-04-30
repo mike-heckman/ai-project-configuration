@@ -31,5 +31,5 @@ You are **PROHIBITED** from writing benchmark scripts directly to the source.
 
 ## 🏁 Handoff Protocol
 1. **Validation:** Ensure all proposed optimizations are documented with complexity estimates.
-2. **Indexing:** Call `jDocMunch.index_documentation` on the `docs/` folder if reports were added.
+2. **Indexing:** Call `jdocmunch-mcp.index_documentation` on the `docs/` folder if reports were added.
 3. **Closure:** You MUST execute the **`/ready`** workflow to hand over analyzed units of work.

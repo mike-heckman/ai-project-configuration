@@ -34,6 +34,13 @@ done
 rm -rf "${ANTIGRAVITY_DIR}/skills"
 ln -sf "${PLANNER_SRC}/skills" "${ANTIGRAVITY_DIR}/skills"
 
+# Link Planner MCP config
+ln -sf "${PLANNER_SRC}/mcp_config.json" "${ANTIGRAVITY_DIR}/mcp_config.json"
+
+# Link jcodemunch-mcp central config
+mkdir -p "${HOME}/.code-index"
+ln -sf "${PLANNER_SRC}/config.jsonc" "${HOME}/.code-index/config.jsonc"
+
 # 2. Setup Worker Configuration (for KVM access)
 echo "Setting up Worker configs..."
 mkdir -p "${AGENTS_DIR}"
@@ -41,7 +48,7 @@ ln -sf "${WORKER_SRC}" "${AGENTS_DIR}/core-worker"
 
 # 3. Setup global Git ignore
 echo "Updating global Git ignore..."
-PAYLOAD="logs/\ntemp/\npublic-dev/\nextract/\n.opencode/\n.agent-worker-env"
+PAYLOAD="logs/\ntemp/\npublic-dev/\nextract/\n.agent-worker-env"
 GLOBAL_IGNORE=$(git config --get core.excludesfile)
 [ -z "$GLOBAL_IGNORE" ] && GLOBAL_IGNORE="$HOME/.config/git/ignore"
 mkdir -p "$(dirname "$GLOBAL_IGNORE")"

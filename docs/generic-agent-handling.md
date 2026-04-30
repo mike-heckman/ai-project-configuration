@@ -1,73 +1,35 @@
-Ran command: `./scripts/read-workflows.sh`
-Used MCP tool: jcodemunch/index_folder
-Used MCP tool: jcodemunch/get_file_tree
-Viewed output.txt
-Viewed init-gemini.sh:1-120
-Viewed init-py-project.sh:1-113
-Listed directory ai-project-configuration
-Listed directory gemini
-Listed directory conditional-rules
-Viewed global-rules.md:1-54
+# Generic Agent Handling & Multi-Agent Support
 
-Here is my feedback and architectural suggestions for adapting your current "installation primary" project to support multiple AI vendors (Antigravity/Gemini, Cursor, Claude, Copilot/Codex) from a single source of truth.
+This document outlines how the repository supports multiple AI agents (Gemini/Antigravity, Claude Code, Cursor) from a single source of truth.
 
-### 1. Assessment of the Current Architecture
-Right now, your source of truth is tightly coupled to Gemini. 
-*   **Directory Structure:** You have a `gemini/` directory containing `global-workflows/`, `skills/`, and `global-rules.md`.
-*   **Hardcoded Paths:** Files like `global-rules.md` explicitly reference `~/.gemini/rules/lang_python.md` and `jCodeMunch`/`jDocMunch` (MCP servers specific to your current environment).
-*   **Distribution Strategy:** `init-gemini.sh` hardlinks these files into global directories (`~/.gemini/antigravity/`), which is a paradigm not natively supported by all AI agents (e.g. Cursor relies heavily on project-local `.cursorrules` and `.cursor/rules/`).
+## 🏗️ Implemented Architecture: Hybrid KVM-Worker
 
-### 2. Proposed "Universal Agent" Architecture
-To prevent state-drift and support a multi-agent environment, you want an architecture where workflows and rules sit in an **agnostic core** and are dynamically "rendered" or "adapted" for each target agent via initialization scripts.
+We have successfully refactored the initial Gemini-only setup into a **Hybrid Agent Architecture**. The "agnostic core" has been split into two role-based directories:
 
-```text
-ai-project-configuration/
-├── core/                       # (Formerly 'gemini/') Agnostic source of truth
-│   ├── rules/                  # Base global and language rules
-│   ├── skills/                 # Personas and boundaries
-│   ├── workflows/              # Standardized workflows (/test, /run)
-│   └── document-templates/     # task-XXXX.md, etc.
-├── agents/                     # Agent-specific adapters & templates
-│   ├── gemini/
-│   │   └── adapter.sh          # Handles ~/.gemini linking
-│   ├── cursor/
-│   │   └── adapter.sh          # Renders markdown into .cursor/rules/*.mdc
-│   ├── opencode/
-│   │   └── adapter.sh          # Renders into opencode context files
-│   └── copilot/
-│       └── adapter.sh          # Concatenates rules for .github/copilot-instructions.md
-├── scripts/
-│   ├── init-workspace.sh       # Interactively triggers relevant adapters
-│   └── template_processor.py   # Helper to render {{PLACEHOLDERS}} into final files
-└── ...
-```
+- **`core-planner/`**: Source of truth for planning-heavy agents (Gemini/Antigravity) running on the host.
+- **`core-worker/`**: Source of truth for execution-heavy agents (Claude Code) running inside the KVM.
 
-### 3. Implementation Suggestions
+### 🔌 Agent Adapters
+The repository uses adapters to "render" or "inject" these core rules into the specific environments expected by different agents:
 
-#### A. Implement a Lightweight Templating System
-Because each agent expects different contexts, you cannot use hardcoded paths. You should replace hardcoded strings in your markdown files with agnostic placeholders. For example, in `global-rules.md`:
-*   *Current:* `Follow ~/.gemini/rules/lang_python.md`
-*   *Future:* `Follow {{AGENT_RULES_DIR}}/lang_python.md`
+1.  **Gemini (Antigravity) Adapter**: Handled by `scripts/init-agents.sh`. It symlinks `core-planner/` to `~/.gemini/antigravity/` on the host.
+2.  **Claude Code (Worker) Adapter**: Handled by `scripts/worker-bridge.sh` and `core-worker/kvm/guest-init.sh`. It mounts `core-worker/` into the Incus VM and symlinks rules to the guest's home directory.
+3.  **Cursor Support**: The `init-py-project.sh` script is being updated to optionally generate `.cursor/rules/*.mdc` files derived from the `core-planner/` skills.
 
-A simple python or `envsubst` bash script can take the `core/` files, inject the correct variables based on the target agent, and output the customized files.
+## 🧩 Universal State Tracking: `.agent-context.md`
+To ensure multiple agents can work on the same project without stepping on each other's toes, we use a mandatory `.agent-context.md` file in the project root.
 
-#### B. Accommodate Different "Ingestion" Methods
-Not all agents understand rules in the same way. Your "adapters" will need to bridge the gap:
-*   **Antigravity/Gemini:** Can continue using the global `~/.gemini` directory structure. The adapter handles variable injection and symlinking.
-*   **Cursor:** Cursor relies on `.mdc` files in a `.cursor/rules/` directory per-project. Your `cursor/adapter.sh` would take the core workflows and skills, inject frontmatter constraints (e.g., `globs: *`, `description: ...`), and symlink them into the project workspace during the `init-py-project.sh` phase.
-*   **Copilot/Codex:** Expects heavily condensed instructions. The adapter might concatenate the most critical rules into a single `.github/copilot-instructions.md`.
-*   **Opencode:** Using Opencode, the adapter might orchestrate custom tools or generate an `.opencode.json` configuration prioritizing specific workflows.
+- **Planner** writes the "Active Task" and "Strategic Intent" to this file.
+- **Worker** reads this file upon entry to understand the current mission.
+- **User** can read this file to see the unified state of all agents.
 
-#### C. Handling Multi-Agent Concurrency
-To allow a developer to use Cursor (for inline autocomplete and local editing) alongside Gemini (for heavy lifting/research/planning) on the same project:
-1.  **Isolated Rule Ingestion:** By running both `cursor/adapter.sh` and `gemini/adapter.sh` during project configuration, Cursor gets its local `.cursor/` folder while Gemini reads from its global config. They won't step on each other's toes.
-2.  **Universal State Tracking:** Ensure the `.agent-context.md` file remains completely agent-agnostic. All agents should be instructed to read from and write state to this exact same file. This allows Gemini to set the "Active Task" and Cursor to read it and know exactly what the current mission is.
-3.  **Command Discrepancies:** Some agents struggle with the arbitrary "slash command" syntax (e.g., `/test`). In your adapters, you can tweak the triggers. For Cursor `.mdc` files, the command might be transformed into a natural language trigger like "When the user asks to test the project, follow the test workflow...".
+## 🚀 Roadmap & Next Steps
 
-### 4. Next Steps for Refactoring
-If you decide to proceed with this architecture, the iterative progression would look like:
-1. Rename `gemini/` to `core/` and genericize the content inside the markdown documents.
-2. Build a simple `template_processor` (either bash or python) to replace variables like `{{AGENT_CONFIG_DIR}}`.
-3. Break the current `scripts/init-gemini.sh` logic into a new `agents/gemini/adapter.sh` that leverages the template processor.
-4. Add the second adapter (e.g., `agents/cursor/adapter.sh`) to prove the templating model works.
-5. Update `scripts/init-py-project.sh` to allow the user to define which AI adapters to install into the local directory workspace.
+### 1. Unified Templating
+Continue replacing hardcoded paths in `core-*` markdown files with placeholders (e.g., `{{AGENT_ROOT}}`) that are injected during initialization.
+
+### 2. Expanded Language Support
+Standardize the "graduation" workflows (lint/test/ready) for non-Python environments (Node/TypeScript, Rust) inside the Worker KVM.
+
+### 3. Integrated Diagnostics
+Enhance the `Debugger` skill inside `core-worker` to automatically ingest logs and traces from the KVM and summarize them for the Planner.

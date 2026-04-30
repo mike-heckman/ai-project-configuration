@@ -20,7 +20,7 @@ show_help() {
     echo "Usage: init-py-project.sh [options]"
     echo ""
     echo "Options:"
-    echo "  -p, --python <version>   Set Python version (default: 3.14)"
+    echo "  -p, --python <version>   Set Python version (default: 3.12)"
     echo "  -t, --type <app|lib>     Set project type (default: app)"
     echo "  -f, --flavor <base|web|data> Add extra packages (default: base)"
     echo "  -d, --dir <path>         Target directory (default: .)"
@@ -79,14 +79,14 @@ mkdir -p scripts src tests logs temp docs/architecture-decisions docs/backlog/do
 
 # 2. Add document templates if they don't exist
 cd docs
-for doc in "${SCRIPT_DIR}/../agents/templates/"*; do
-    # Skip non-markdown docs for the docs folder (like Dockerfiles)
+for doc in "${SCRIPT_DIR}/../core-planner/templates/"*; do
+    # Skip non-markdown docs for the docs folder
     if [[ "$doc" != *.md ]]; then
         continue
     fi
-    # Also skip AGENTS.md, OPENCODE.md and cheat-sheet.md here as they belong in the root or elsewhere
+    # Also skip cheat-sheet.md here as it belongs in the root or elsewhere
     BASE_DOC="$(basename "$doc")"
-    if [ "$BASE_DOC" = "AGENTS.md" ] || [ "$BASE_DOC" = "OPENCODE.md" ] || [ "$BASE_DOC" = "cheat-sheet.md" ]; then
+    if [ "$BASE_DOC" = "cheat-sheet.md" ]; then
         continue
     fi
     if [ ! -f "${BASE_DOC}" ]; then
@@ -161,9 +161,9 @@ if [ ! -f ".pyrightconfig.json" ]; then
     cp -a "${SOURCE_DIR}/pyright-master-config.json" .pyrightconfig.json
 fi
 
-# 5.5 Inject Opencode integration files
-if [ ! -f "AGENTS.md" ]; then
-    cp -a "${SCRIPT_DIR}/../agents/templates/AGENTS.md" AGENTS.md
+# 5.5 Link global cheat-sheet if missing
+if [ ! -f "docs/cheat-sheet.md" ]; then
+    cp -a "${SCRIPT_DIR}/../core-planner/templates/cheat-sheet.md" docs/cheat-sheet.md
 fi
 
 # 6. Install pre-commit and set up the git hook
