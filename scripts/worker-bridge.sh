@@ -53,6 +53,17 @@ if [ "$(incus info "${VM_NAME}" | grep Status: | awk '{print $2}')" != "RUNNING"
     # Pi Config
     incus config device remove "$VM_NAME" pi-config >/dev/null 2>&1 || true
     incus config device add "$VM_NAME" pi-config disk source="${CORE_WORKER_PATH}/kvm/pi" path="/home/ubuntu/.pi/agent"
+    
+    # Pi Sessions (intercept to host central directory)
+    PI_SESSIONS_DIR="${HOME}/.agents/pi-sessions"
+    mkdir -p "$PI_SESSIONS_DIR"
+    
+    # Prune session files/directories that are > 14 days old
+    find "$PI_SESSIONS_DIR" -type f -mtime +14 -delete
+    find "$PI_SESSIONS_DIR" -mindepth 1 -type d -empty -delete
+    
+    incus config device remove "$VM_NAME" pi-sessions >/dev/null 2>&1 || true
+    incus config device add "$VM_NAME" pi-sessions disk source="$PI_SESSIONS_DIR" path="/home/ubuntu/.pi/agent/sessions"
 fi
 
 # 5. Handle environment variables and ROLE passing

@@ -25,10 +25,11 @@ if [ -f "/workspace/.agent-worker-env" ]; then
 fi
 
 # 3. Path parity (symlink workspace to original host path if needed)
-if [ ! -z "$HOST_WORKSPACE_PATH" ]; then
+if [ ! -z "$HOST_WORKSPACE_PATH" ] && [ "$HOST_WORKSPACE_PATH" != "/workspace" ]; then
     echo "Creating path parity for $HOST_WORKSPACE_PATH..."
     mkdir -p "$(dirname "$HOST_WORKSPACE_PATH")"
-    ln -sf /workspace "$HOST_WORKSPACE_PATH"
+    # Use -n to prevent creating /workspace/workspace if HOST_WORKSPACE_PATH exists
+    ln -sfn /workspace "$HOST_WORKSPACE_PATH"
 fi
 
 # 4. User and Permissions setup
@@ -58,8 +59,6 @@ fi
 
 # Ensure config directories exist and are owned by target user
 mkdir -p "/home/$TARGET_USER/.agents"
-ln -sfn /opt/core-worker "/home/$TARGET_USER/.agents/core-worker"
-ln -sfn /opt/core-worker/skills "/home/$TARGET_USER/.agents/skills"
 chown -R $TARGET_USER:$TARGET_USER "/home/$TARGET_USER"
 
 # 5. MCP & Pi Configuration link
@@ -79,12 +78,23 @@ ln -sf "/opt/core-worker/config.jsonc" "/home/$TARGET_USER/.code-index/config.js
 
 chown -R $TARGET_USER:$TARGET_USER "/home/$TARGET_USER/.config" "/home/$TARGET_USER/.code-index" "/home/$TARGET_USER/.pi"
 
+# 5.5 Cleanup any legacy cyclical symlinks and setup path parity in workspace
+if [ -L "/workspace/workspace" ]; then
+    echo "Removing cyclical symlink /workspace/workspace..."
+    rm "/workspace/workspace"
+fi
+
+# Link Pi config into workspace to satisfy rules referencing ./core-worker/
+if [ -d "/workspace" ] && [ -d "/home/$TARGET_USER/.pi/agent" ]; then
+    ln -sfn "/home/$TARGET_USER/.pi/agent" /workspace/core-worker
+fi
+
 # 6. Launch pi.dev with the specified ROLE inside tmux
 if [ ! -z "$ROLE" ]; then
-    RULES_FILE="/opt/core-worker/rules/${ROLE}.md"
+    RULES_FILE="/home/$TARGET_USER/.pi/agent/rules/${ROLE}.md"
     # Fallback to -rules.md suffix
     if [ ! -f "$RULES_FILE" ]; then
-        RULES_FILE="/opt/core-worker/rules/${ROLE}-rules.md"
+        RULES_FILE="/home/$TARGET_USER/.pi/agent/rules/${ROLE}-rules.md"
     fi
 
     if [ -f "$RULES_FILE" ]; then
@@ -115,7 +125,12 @@ if [ ! -z "$ROLE" ]; then
             echo "Installing pi-mcp-adapter..."
             # First ensure pi is initialized for the user
             su - "$TARGET_USER" -c "mkdir -p ~/.pi/agent"
-            # Since 'pi install' might be interactive or wait for confirmation, we should ensure it runs non-interactively or we can just run it. 
+            
+            # Fix NPM permissions by using a local prefix
+            su - "$TARGET_USER" -c "mkdir -p ~/.local"
+            su - "$TARGET_USER" -c "npm config set prefix '~/.local'"
+            
+            # Since 'pi install' might be interactive or wait for confirmation, we should ensure it runs non-interactively.
             su - "$TARGET_USER" -c "pi install npm:pi-mcp-adapter"
         fi
 
@@ -136,6 +151,7 @@ if [ ! -z "$ROLE" ]; then
 
 export ANTHROPIC_API_KEY=ollama
 export PATH="\$PATH:/usr/local/bin:/home/$TARGET_USER/.local/bin"
+# workflows are automatically discovered in ~/.pi/agent/workflows/
 cd /workspace
 
 # Run Pi as the target user

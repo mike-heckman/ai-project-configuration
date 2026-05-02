@@ -29,7 +29,8 @@ export default function (pi: ExtensionAPI) {
 
     ctx.ui.notify("Agent stalled without completion. Nudging to continue...", "warning");
     pi.sendUserMessage(
-      "You stopped without calling the `autonomous_mission_complete` tool. As an autonomous worker, you must continue working until the task is completely verified and finished. If you are waiting on a process, use tools to check its status. If you are fully done, you MUST call the `autonomous_mission_complete` tool."
+      "You stopped without calling the `autonomous_mission_complete` tool. As an autonomous worker, you must continue working until the task is completely verified and finished. If you are waiting on a process, use tools to check its status. If you are fully done, you MUST call the `autonomous_mission_complete` tool.",
+      { streamingBehavior: "followUp" }
     );
   });
 }

@@ -11,5 +11,8 @@
     "enabled": true,
     "maxRetries": 3
   },
-  "lastChangelogVersion": "0.70.6"
+  "lastChangelogVersion": "0.70.6",
+  "packages": [
+    "npm:pi-mcp-adapter"
+  ]
 }

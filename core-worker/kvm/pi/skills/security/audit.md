@@ -2,7 +2,7 @@
 description: Run an adversarial security audit on a specific module.
 ---
 # /audit {{module}}
-1. **Persona Load:** Load `{{SKILLS_DIR}}/security/SKILL.md` and adhere to its persona constraints.
+1. **Skill Load:** Load `{{SKILLS_DIR}}/security/SKILL.md` and adhere to its skill constraints.
 2. **Visual Status:** Prefix all subsequent responses in this session with: `[MODE: 🛡️ SECURITY | TARGET: {{module}}]`.
 3. **Analyze:** Scan `{{module}}` for vulnerabilities, logic flaws, and hardcoded secrets using the **Core Responsibilities** in `SKILL.md`.
 4. **Report:** 

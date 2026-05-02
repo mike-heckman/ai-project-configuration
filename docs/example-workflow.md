@@ -1,67 +1,73 @@
-# Sample Workflow: Building a Weather CLI Tool
+# Example End-to-End Workflow
 
-This document outlines the end-to-end workflow for creating a small-to-medium project using the **Hybrid KVM-Worker Architecture**.
+This document provides a complete example of a project session from inception to completion using the Antigravity framework.
 
-## 1. Project Initialization (Planner)
-
-First, the User and Gemini (Planner) initialize the global environment and scaffold the new project.
+## 1. Create the Project in Git
+Start by creating a new repository on your Git provider (e.g., GitHub) and clone it locally, or initialize a new one.
 
 ```bash
-# 1. Ensure global AI rules are linked
-./scripts/init-agents.sh
-
-# 2. Scaffold a new Python project
-mkdir weather-cli && cd weather-cli
-/path/to/ai-project-configuration/scripts/init-py-project.sh
+mkdir my-awesome-project
+cd my-awesome-project
+git init
 ```
 
-## 2. Architectural Design (Architect Mode)
+## 2. Initialize the Project Directory
+Use the framework's initialization scripts to set up the project structure, language environment, and agent configuration.
 
-The Planner enters **Architect Mode** to define the system and record decisions.
+### Example: Initializing a Python Web App
+Assuming the `ai-project-configuration` repository is at `~/Projects/ai-project-configuration`:
 
-1.  **Run `/design`**:
-    *   Goal: "Design a CLI tool that fetches weather data from OpenWeatherMap API and displays it in a formatted table."
-    *   Architect defines: `WeatherClient`, `ResponseParser`, and `TableFormatter`.
-2.  **Run `/record-adr`**:
-    *   Decision: "Use `httpx` for async requests and `rich` for terminal formatting."
-3.  **Scaffold Backlog**:
-    *   Architect creates `docs/backlog/task-0001-weather-client.md` and `docs/backlog/task-0002-cli-interface.md`.
-    *   Status is set to `READY`.
+```bash
+# Initialize a Python project with the 'web' flavor
+~/Projects/ai-project-configuration/scripts/init-py-project.sh --type app --flavor web --dir .
+```
 
-## 3. Transition to Implementation (Coder Mode)
+This script will:
+- Create the `src`, `tests`, `scripts`, and `docs` directories.
+- Copy master linting and type-checking configs (`.ruff-master-config.toml`, etc.).
+- Set up the local `.agent-context.md`.
+- Link utility scripts like `/lint`, `/test`, and `/run` into the `./scripts` folder.
 
-The Planner reviews the implementation plan for the first task and triggers the Worker.
+## 3. Architect Phase: Scaffolding and Task Creation
+Open a session with Antigravity and enter Architect mode. The goal here is to define the technical design and break it down into actionable tasks.
 
-1.  **Select Task**: `task-0001-weather-client.md`.
-2.  **Run `/start-mission`**:
-    *   This triggers `scripts/worker-bridge.sh`.
-    *   An Incus VM is launched (e.g., `worker-python-weather-cli`).
-    *   The project root is mounted to `/workspace`.
-    *   Claude Code is launched inside the VM with `coder-rules`.
+**Prompt Example:**
+> "Enter architect mode. We are building a FastAPI backend with a simple dashboard. Scaffold the initial `src/` structure and create the implementation plan in `docs/backlog/` using `task-XXXX.md` files."
 
-## 4. Autonomous Execution (Worker Plane)
+### Actions in Architect Mode
+1. **Scaffold:** Antigravity will create the skeleton files (e.g., `src/main.py`, `src/api.py`).
+2. **Plan:** It will generate a series of task files in `./docs/backlog/`:
+   - `docs/backlog/task-0001.md`: Implement the Metrics API.
+   - `docs/backlog/task-0002.md`: Build the Frontend Dashboard.
+   - `docs/backlog/task-0003.md`: Add Unit Tests for the API.
 
-Inside the Incus VM, **Claude Code (Worker)** takes over.
+Set the status of the first task to `READY` in the task markdown file to signal it is ready for the worker.
 
-1.  **Implement**: Claude Code writes the `WeatherClient` logic in `src/client.py`.
-2.  **Verify**:
-    *   Claude runs `/test` to verify unit tests in `tests/test_client.py`.
-    *   Claude runs `/lint` to ensure compliance with `ruff` and `pyright`.
-3.  **Graduate**:
-    *   Once the task is complete and verified, Claude runs **`/ready`**.
-    *   This updates the task status to `COMPLETED` and prepares the hand-off.
+## 4. Execution Phase: Running the Worker Bridge
+Once the tasks are defined and the project is initialized, use the `worker-bridge.sh` to hand off implementation to a local LLM running inside a hardened KVM environment.
 
-## 5. Final Audit & Review (Planner)
+```bash
+# Launch the worker for the current project
+# Usage: ./worker-bridge.sh <project_path> <role> <language>
+~/Projects/ai-project-configuration/scripts/worker-bridge.sh $(pwd) coder python
+```
 
-The Worker VM is stopped/deleted, and the Planner (Gemini) reviews the work on the host.
+### What happens next:
+1. **VM Spin-up:** An Incus VM is launched or attached.
+2. **Mounting:** Your project code is mounted into the VM at `/workspace`.
+3. **Autonomous Loop:** The worker agent (running Pi) scans `docs/backlog/` for `READY` tasks.
+4. **Implementation:** It executes the code changes, runs `/lint` and `/test`, and moves the task to `done/` upon success.
+5. **Session Monitoring:** You can watch the progress via the attached tmux session.
 
-1.  **Run `/ux` (Product Mode)**:
-    *   Gemini critiques the CLI output ergonomics.
-2.  **Run `/scale` (Performance Mode)**:
-    *   Gemini checks the async overhead and API latency handling.
-3.  **Close Task**: Gemini updates the project documentation and prepares for the next backlog item.
+## 5. Finalizing and Git Check-in
+After the worker has completed the tasks, verify the changes on your host machine.
 
----
+```bash
+# Run the project locally to verify
+./scripts/run.sh
 
-> [!TIP]
-> Use `incus list` on the host to monitor your active workers and `incus exec <vm_name> -- bash` if you need to manually inspect the guest environment.
+# If everything looks good, commit and push
+git add .
+git commit -m "Initial implementation of FastAPI dashboard via Antigravity Worker"
+git push
+```
