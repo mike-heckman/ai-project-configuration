@@ -41,6 +41,7 @@ This document details every file and directory that is used in a project workspa
 | ~/.gemini/antigravity/ | directory (host) | N/A | Host planner agent global workflows and skills |
 | ~/.gemini/rules/ | directory (host) | N/A | Host planner agent instructions |
 | ~/.code-index/config.jsonc | file (host/KVM) | N/A | Global jcodemunch-mcp configuration |
+| ~/.doc-index/config.jsonc | file (host/KVM) | N/A | Global jdocmunch-mcp configuration |
 | /opt/core-worker/ | virtiofs mount (KVM) | N/A | Mount point for core worker assets inside KVM |
 | /tmp/worker-wrapper.sh | auto-generated (KVM) | N/A | Temporary wrapper script to launch Pi worker session |
 | /tmp/worker.log | auto-generated (KVM) | N/A | Output logs from the Pi worker session |
@@ -55,3 +56,9 @@ This document details every file and directory that is used in a project workspa
 | `~/.agents/core-worker` | `/opt/core-worker` | Provides core worker scripts, assets, and configs to the agent | when a worker-bridge is called |
 | `~/.agents/core-worker/kvm/pi` | `/home/ubuntu/.pi/agent` | Direct configuration and rules mount for the Pi coding agent | when a worker-bridge is called |
 | `~/.agents/pi-sessions` | `/home/ubuntu/.pi/agent/sessions` | Intercepts session state out of the repository into a centralized host directory | when a worker-bridge is called |
+
+## Network & Proxy Devices
+
+| Device Name | Host Port | Guest Port | Purpose | When Configured |
+| :--- | :--- | :--- | :--- | :--- |
+| `pi-ui` | `8000-8999` (Dynamic) | `7681` | Maps the `ttyd` web terminal to the host for browser access | when a worker-bridge is called |

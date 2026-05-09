@@ -5,6 +5,23 @@
 PROJECT_PATH=$(realpath "$1")
 ROLE=$2
 LANGUAGE=$3 # python or typescript
+if [ -z "$LANGUAGE" ]; then
+    HAS_PY=false
+    HAS_TS=false
+    [ -f "$PROJECT_PATH/.python-version" ] || [ -f "$PROJECT_PATH/pyproject.toml" ] || [ -f "$PROJECT_PATH/requirements.txt" ] && HAS_PY=true
+    [ -f "$PROJECT_PATH/package.json" ] || [ -f "$PROJECT_PATH/tsconfig.json" ] && HAS_TS=true
+
+    if $HAS_PY && $HAS_TS; then
+        LANGUAGE="polyglot"
+    elif $HAS_PY; then
+        LANGUAGE="python"
+    elif $HAS_TS; then
+        LANGUAGE="typescript"
+    else
+        LANGUAGE="general"
+    fi
+    echo "Auto-detected project language: $LANGUAGE"
+fi
 
 # 1. Resolve core worker assets
 # Prioritize ~/.agents/core-worker link created by init-agents.sh
@@ -27,6 +44,10 @@ fi
 # 2. Define VM parameters
 VM_NAME="worker-${LANGUAGE}-$(basename "$PROJECT_PATH" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')"
 IMAGE="images:ubuntu/22.04" # Default base image
+
+# Generate a unique port between 8000 and 8999 based on VM_NAME for the Browser UI
+PORT_OFFSET=$(echo "$VM_NAME" | cksum | awk '{print $1 % 1000}')
+HOST_PORT=$((8000 + PORT_OFFSET))
 
 # 3. Launch the VM if it doesn't exist
 VM_EXISTS=true
@@ -64,6 +85,10 @@ if [ "$(incus info "${VM_NAME}" | grep Status: | awk '{print $2}')" != "RUNNING"
     
     incus config device remove "$VM_NAME" pi-sessions >/dev/null 2>&1 || true
     incus config device add "$VM_NAME" pi-sessions disk source="$PI_SESSIONS_DIR" path="/home/ubuntu/.pi/agent/sessions"
+
+    # Pi UI (ttyd) Proxy - Intercepts guest port 7681 to a unique host port
+    incus config device remove "$VM_NAME" pi-ui >/dev/null 2>&1 || true
+    incus config device add "$VM_NAME" pi-ui proxy listen=tcp:127.0.0.1:$HOST_PORT connect=tcp:127.0.0.1:7681
 fi
 
 # 5. Handle environment variables and ROLE passing
@@ -80,9 +105,6 @@ incus config set "$VM_NAME" environment.ROLE="$ROLE"
 incus config set "$VM_NAME" environment.HOST_WORKSPACE_PATH="$PROJECT_PATH"
 incus config set "$VM_NAME" environment.COLUMNS="$(tput cols)"
 incus config set "$VM_NAME" environment.LINES="$(tput lines)"
-
-
-
 
 # 6. Start the VM (if stopped)
 incus start "$VM_NAME" >/dev/null 2>&1 || true
@@ -117,6 +139,17 @@ echo "Triggering guest initialization..."
 incus exec "$VM_NAME" -- bash /opt/core-worker/kvm/guest-init.sh
 
 echo "Worker VM ${VM_NAME} is active."
-echo "To attach to the live session, run:"
-echo "  incus exec ${VM_NAME} -- su - ubuntu -c \"tmux attach -t worker\""
-exec incus exec ${VM_NAME} -- su - ubuntu -c "tmux attach -t worker"
+echo "Browser UI: http://127.0.0.1:${HOST_PORT}"
+
+# Launch browser terminal (Chromium preferred for --app mode)
+if command -v chromium &> /dev/null; then
+    chromium --app="http://127.0.0.1:${HOST_PORT}" >/dev/null 2>&1 &
+elif command -v chromium-browser &> /dev/null; then
+    chromium-browser --app="http://127.0.0.1:${HOST_PORT}" >/dev/null 2>&1 &
+elif command -v google-chrome &> /dev/null; then
+    google-chrome --app="http://127.0.0.1:${HOST_PORT}" >/dev/null 2>&1 &
+else
+    xdg-open "http://127.0.0.1:${HOST_PORT}" >/dev/null 2>&1 &
+fi
+
+echo "To attach via CLI, run: incus exec ${VM_NAME} -- su - ubuntu -c \"tmux attach -t worker\""

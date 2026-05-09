@@ -1,4 +1,6 @@
 {
+  "trusted_folders": ["/workspace"],
+  "trusted_folders_whitelist_mode": false,
   "meta_fields": [],
   "disabled_tools": [
     "index_repo",

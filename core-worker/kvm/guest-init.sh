@@ -17,6 +17,22 @@ while [ ! -d "/workspace" ] || [ ! -d "/opt/core-worker" ]; do
     sleep 1
     ((RETRY++))
 done
+echo "Mounts verified."
+
+# 1.5 Network Stabilization
+# Prevent hanging on HTTPS/TCP handshakes in VPN/Tailscale environments by optimizing MTU
+PRIMARY_IFACE=$(ip route | grep default | awk '{print $5}' | head -n 1)
+if [ ! -z "$PRIMARY_IFACE" ]; then
+    echo "Optimizing network MTU on $PRIMARY_IFACE for stability..."
+    ip link set dev "$PRIMARY_IFACE" mtu 1300
+fi
+
+# Ensure DNS is functional
+if ! ping -c 1 google.com &>/dev/null; then
+    echo "DNS check failed. Adding fallback nameservers..."
+    echo "nameserver 8.8.8.8" > /etc/resolv.conf
+    echo "nameserver 1.1.1.1" >> /etc/resolv.conf
+fi
 
 # 2. Source environment variables from workspace
 if [ -f "/workspace/.agent-worker-env" ]; then
@@ -72,11 +88,13 @@ ln -sf "/opt/core-worker/mcp_config.json" "/home/$TARGET_USER/.config/mcp/mcp.js
 # mkdir -p "/home/$TARGET_USER/.pi/agent"
 # ln -sf "/opt/core-worker/kvm/pi/models.json" "/home/$TARGET_USER/.pi/agent/models.json"
 
-# Link jcodemunch-mcp central config
+# Link jcodemunch-mcp and jdocmunch-mcp central config
 mkdir -p "/home/$TARGET_USER/.code-index"
+mkdir -p "/home/$TARGET_USER/.doc-index"
 ln -sf "/opt/core-worker/config.jsonc" "/home/$TARGET_USER/.code-index/config.jsonc"
+ln -sf "/opt/core-worker/config.jsonc" "/home/$TARGET_USER/.doc-index/config.jsonc"
 
-chown -R $TARGET_USER:$TARGET_USER "/home/$TARGET_USER/.config" "/home/$TARGET_USER/.code-index" "/home/$TARGET_USER/.pi"
+chown -R $TARGET_USER:$TARGET_USER "/home/$TARGET_USER/.config" "/home/$TARGET_USER/.code-index" "/home/$TARGET_USER/.doc-index" "/home/$TARGET_USER/.pi"
 
 # 5.5 Cleanup any legacy cyclical symlinks and setup path parity in workspace
 if [ -L "/workspace/workspace" ]; then
@@ -114,6 +132,11 @@ if [ ! -z "$ROLE" ]; then
             su - "$TARGET_USER" -c "curl -LsSf https://astral.sh/uv/install.sh | sh"
         fi
 
+        # Pre-install MCP tools to avoid uvx latency/connection issues
+        echo "Pre-installing MCP tools..."
+        su - "$TARGET_USER" -c "uv tool install jcodemunch-mcp"
+        su - "$TARGET_USER" -c "uv tool install jdocmunch-mcp"
+
         # Ensure pi coding agent is installed
         if ! command -v pi &> /dev/null; then
             echo "Pi coding agent not found. Installing..."
@@ -134,9 +157,9 @@ if [ ! -z "$ROLE" ]; then
             su - "$TARGET_USER" -c "pi install npm:pi-mcp-adapter"
         fi
 
-        # Ensure tmux is available
-        if ! command -v tmux &> /dev/null; then
-            apt-get update && apt-get install -y tmux
+        # Ensure tmux and ttyd are available
+        if ! command -v tmux &> /dev/null || ! command -v ttyd &> /dev/null; then
+            apt-get update && apt-get install -y tmux ttyd
         fi
         
         # Ensure common local bin paths are in PATH
@@ -170,18 +193,21 @@ EOF
         chown $TARGET_USER:$TARGET_USER /tmp/worker-wrapper.sh
 
         # Forcefully restart the session to pick up new environment/rules
-        echo "Restarting worker session..."
+        echo "Restarting worker session (Browser UI enabled)..."
         su - $TARGET_USER -c "tmux kill-session -t worker 2>/dev/null || true"
+        pkill -f ttyd 2>/dev/null || true
 
-        # Run tmux as the target user
-        # We force the window size to match the host terminal dimensions if available
+        # Run ttyd as the target user in the background
+        # -W allows writing (interactive), -p 7681 is the guest port
+        # It automatically launches/attaches to the tmux 'worker' session
         TMUX_SIZE=""
         [ ! -z "$COLUMNS" ] && [ ! -z "$LINES" ] && TMUX_SIZE="-x $COLUMNS -y $LINES"
-        su - $TARGET_USER -c "tmux new-session -d -s worker $TMUX_SIZE /tmp/worker-wrapper.sh"
+        su - $TARGET_USER -c "nohup ttyd -p 7681 -W tmux new-session -A -s worker $TMUX_SIZE /tmp/worker-wrapper.sh > /tmp/ttyd.log 2>&1 &"
         
-        echo "Pi is running in a background tmux session named 'worker' (User: $TARGET_USER)."
+        echo "Worker session started. Browser UI available on port 7681 (guest)."
         
         # Return quickly after launching
+        sleep 1
         su - $TARGET_USER -c "tmux has-session -t worker"
     else
         echo "Error: Rules file $RULES_FILE not found."
