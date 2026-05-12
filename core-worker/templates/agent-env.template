@@ -3,8 +3,7 @@
 
 # --- Agent Configuration ---
 export ROLE="{{ROLE}}"
-export AGENT_NAME="Opencode"
-export CORE_PATH="/home/mike/.agents/core-worker"
+export CORE_PATH="{{VM_HOME}}/.agents/core-worker"
 export WORKFLOWS_DIR="${CORE_PATH}/workflows"
 export RULES_DIR="${CORE_PATH}/rules"
 export SKILLS_DIR="${CORE_PATH}/skills"
@@ -13,11 +12,6 @@ export SKILLS_DIR="${CORE_PATH}/skills"
 export WORKSPACE_ROOT="/workspace"
 export HOST_WORKSPACE_PATH="{{HOST_WORKSPACE_PATH}}"
 
-# --- LLM / Provider Configuration ---
-# export ANTHROPIC_API_KEY="sk-..."
-# export OPENAI_API_KEY="sk-..."
-# export LLM_BASE_URL="http://on-prem-llm:11434"
-
 # --- Tooling Configuration ---
 export UV_CACHE_DIR="/workspace/.uv_cache"
-export PATH="${PATH}:${HOME}/.local/bin"
+export PATH="{{VM_HOME}}/.local/bin:${PATH}"

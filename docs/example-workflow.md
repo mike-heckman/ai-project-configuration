@@ -59,12 +59,21 @@ Once the tasks are defined and the project is initialized, use the `worker-bridg
 4. **Implementation:** It executes the code changes, runs `/lint` and `/test`, and moves the task to `done/` upon success.
 5. **Session Monitoring:** You can watch the progress via the attached tmux session.
 
+> [!TIP]
+> Use `incus list` on the host to monitor your active workers and `incus exec <vm_name> -- bash` if you need to manually inspect the guest environment.
+
 ## 5. Finalizing and Git Check-in
 After the worker has completed the tasks, verify the changes on your host machine.
 
 ```bash
 # Run the project locally to verify
 ./scripts/run.sh
+
+1.  **Run `/ux` (Product Mode)**:
+    *   Gemini critiques the CLI output ergonomics.
+2.  **Run `/scale` (Performance Mode)**:
+    *   Gemini checks the async overhead and API latency handling.
+3.  **Close Task**: Gemini updates the project documentation and prepares for the next backlog item.  
 
 # If everything looks good, commit and push
 git add .

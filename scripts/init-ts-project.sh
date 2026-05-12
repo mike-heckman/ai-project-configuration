@@ -59,6 +59,7 @@ if [ -f "package.json" ]; then
 else
     echo "Bootstrapping greenfield TypeScript project..."
     FRESH_INSTALL=true
+    echo "HAS_TS=true" >> .languages
 fi
 
 # Build language independent project structure

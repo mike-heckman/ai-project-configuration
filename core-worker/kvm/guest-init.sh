@@ -9,7 +9,9 @@ echo "Verifying mounts..."
 sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1
 sysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null 2>&1
 RETRY=0
-while [ ! -d "/workspace" ] || [ ! -d "/opt/core-worker" ]; do
+CORE_WORKER_PATH="${VM_HOME}/.agents/core-worker"
+
+while [ ! -d "${HOST_WORKSPACE_PATH}" ] || [ ! -d "${CORE_WORKER_PATH}" ]; do
     if [ $RETRY -gt 10 ]; then
         echo "Error: Mount points not found after 10 seconds. Is incus-agent running?"
         exit 1
@@ -34,18 +36,15 @@ if ! ping -c 1 google.com &>/dev/null; then
     echo "nameserver 1.1.1.1" >> /etc/resolv.conf
 fi
 
-# 2. Source environment variables from workspace
-if [ -f "/workspace/.agent-worker-env" ]; then
-    echo "Sourcing environment from /workspace/.agent-worker-env"
-    source /workspace/.agent-worker-env
-fi
 
-# 3. Path parity (symlink workspace to original host path if needed)
-if [ ! -z "$HOST_WORKSPACE_PATH" ] && [ "$HOST_WORKSPACE_PATH" != "/workspace" ]; then
-    echo "Creating path parity for $HOST_WORKSPACE_PATH..."
-    mkdir -p "$(dirname "$HOST_WORKSPACE_PATH")"
-    # Use -n to prevent creating /workspace/workspace if HOST_WORKSPACE_PATH exists
-    ln -sfn /workspace "$HOST_WORKSPACE_PATH"
+if [ -f "${CORE_WORKER_PATH}/.env" ]; then
+    echo "Sourcing environment from ${VM_HOME}/.agents/core-worker/.env"
+    source "${CORE_WORKER_PATH}/.env"
+fi
+# 2. Source environment variables from workspace
+if [ -f "${HOST_WORKSPACE_PATH}/.agent-worker-env" ]; then
+    echo "Sourcing environment from ${HOST_WORKSPACE_PATH}/.agent-worker-env"
+    source "${HOST_WORKSPACE_PATH}/.agent-worker-env"
 fi
 
 # 4. User and Permissions setup
@@ -54,65 +53,39 @@ fi
 TARGET_USER="ubuntu"
 if ! id "$TARGET_USER" &>/dev/null; then
     # Fallback to creating mike if ubuntu doesn't exist
-    TARGET_USER="mike"
-    if ! id "mike" &>/dev/null; then
-        useradd -m -s /bin/bash -u 1000 mike
+    TARGET_USER="user"
+    if ! id "user" &>/dev/null; then
+        useradd -m -s /bin/bash -u 1000 "${TARGET_USER}"
     fi
 fi
 
 # Allow target user to use sudo without password
 echo "$TARGET_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/99-agent-user
 
-# Path parity for /home/mike (common in scripts)
-# We use -n to treat existing symlink/dir as a file to be replaced
-if [ "$TARGET_USER" = "ubuntu" ]; then
-    if [ -d "/home/mike" ] && [ ! -L "/home/mike" ]; then
-        # If it's a real directory, move it or remove it to make room for the link
-        rmdir "/home/mike" 2>/dev/null || mv "/home/mike" "/home/mike.bak"
-    fi
-    ln -sfn /home/ubuntu /home/mike
-fi
-
 # Ensure config directories exist and are owned by target user
-mkdir -p "/home/$TARGET_USER/.agents"
-chown -R $TARGET_USER:$TARGET_USER "/home/$TARGET_USER"
+export USER_HOME="/home/$TARGET_USER"
+mkdir -p "$USER_HOME/.agents"
+chown -R $TARGET_USER:$TARGET_USER "$USER_HOME"
 
 # 5. MCP & Pi Configuration link
 echo "Configuring AI tools for Worker..."
-mkdir -p "/home/$TARGET_USER/.config/claude"
-mkdir -p "/home/$TARGET_USER/.config/mcp"
-ln -sf "/opt/core-worker/mcp_config.json" "/home/$TARGET_USER/.config/claude/mcp_config.json"
-ln -sf "/opt/core-worker/mcp_config.json" "/home/$TARGET_USER/.config/mcp/mcp.json"
+mkdir -p "$USER_HOME/.config/claude" "$USER_HOME/.config/mcp" "$USER_HOME/.code-index" "$USER_HOME/.doc-index"
+chown -R $TARGET_USER:$TARGET_USER "$USER_HOME/.config" "$USER_HOME/.code-index" "$USER_HOME/.doc-index" "$USER_HOME/.pi"
 
-# Pi Configuration (Handled via direct mount in worker-bridge.sh)
-# mkdir -p "/home/$TARGET_USER/.pi/agent"
-# ln -sf "/opt/core-worker/kvm/pi/models.json" "/home/$TARGET_USER/.pi/agent/models.json"
+ln -sf "${CORE_WORKER_PATH}/mcp_config.json" "$USER_HOME/.config/claude/mcp_config.json"
+ln -sf "${CORE_WORKER_PATH}/mcp_config.json" "$USER_HOME/.config/mcp/mcp.json"
 
 # Link jcodemunch-mcp and jdocmunch-mcp central config
-mkdir -p "/home/$TARGET_USER/.code-index"
-mkdir -p "/home/$TARGET_USER/.doc-index"
-ln -sf "/opt/core-worker/config.jsonc" "/home/$TARGET_USER/.code-index/config.jsonc"
-ln -sf "/opt/core-worker/config.jsonc" "/home/$TARGET_USER/.doc-index/config.jsonc"
+ln -sf "${CORE_WORKER_PATH}/config.jsonc" "$USER_HOME/.code-index/config.jsonc"
+ln -sf "${CORE_WORKER_PATH}/config.jsonc" "$USER_HOME/.doc-index/config.jsonc"
 
-chown -R $TARGET_USER:$TARGET_USER "/home/$TARGET_USER/.config" "/home/$TARGET_USER/.code-index" "/home/$TARGET_USER/.doc-index" "/home/$TARGET_USER/.pi"
-
-# 5.5 Cleanup any legacy cyclical symlinks and setup path parity in workspace
-if [ -L "/workspace/workspace" ]; then
-    echo "Removing cyclical symlink /workspace/workspace..."
-    rm "/workspace/workspace"
-fi
-
-# Link Pi config into workspace to satisfy rules referencing ./core-worker/
-if [ -d "/workspace" ] && [ -d "/home/$TARGET_USER/.pi/agent" ]; then
-    ln -sfn "/home/$TARGET_USER/.pi/agent" /workspace/core-worker
-fi
 
 # 6. Launch pi.dev with the specified ROLE inside tmux
 if [ ! -z "$ROLE" ]; then
-    RULES_FILE="/home/$TARGET_USER/.pi/agent/rules/${ROLE}.md"
+    RULES_FILE="$USER_HOME/.pi/agent/rules/${ROLE}.md"
     # Fallback to -rules.md suffix
     if [ ! -f "$RULES_FILE" ]; then
-        RULES_FILE="/home/$TARGET_USER/.pi/agent/rules/${ROLE}-rules.md"
+        RULES_FILE="$USER_HOME/.pi/agent/rules/${ROLE}-rules.md"
     fi
 
     if [ -f "$RULES_FILE" ]; then
@@ -121,6 +94,7 @@ if [ ! -z "$ROLE" ]; then
         # Provisioning: Ensure Node.js, uv, and dependencies are installed
         if ! command -v npm &> /dev/null; then
             echo "Node.js not found. Provisioning environment..."
+
             export DEBIAN_FRONTEND=noninteractive
             apt-get update && apt-get install -y curl
             curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
@@ -163,19 +137,20 @@ if [ ! -z "$ROLE" ]; then
         fi
         
         # Ensure common local bin paths are in PATH
-        export PATH="$PATH:/usr/local/bin:/home/$TARGET_USER/.local/bin"
+        export PATH="$PATH:/usr/local/bin:$USER_HOME/.local/bin"
         
         # Write the wrapper script (remove old one first to avoid permission issues)
         rm -f /tmp/worker-wrapper.sh
         cat <<EOF > /tmp/worker-wrapper.sh
 #!/bin/bash
 # Source environment variables (API keys, etc.)
-[ -f /workspace/.agent-worker-env ] && source /workspace/.agent-worker-env
+[ -f "${VM_HOME}/.agents/core-worker/.env" ] && source "${VM_HOME}/.agents/core-worker/.env" 
+[ -f "${HOST_WORKSPACE_PATH}/.agent-worker-env" ] && source "${HOST_WORKSPACE_PATH}/.agent-worker-env"
 
 export ANTHROPIC_API_KEY=ollama
-export PATH="\$PATH:/usr/local/bin:/home/$TARGET_USER/.local/bin"
+export PATH="\$PATH:/usr/local/bin:$USER_HOME/.local/bin"
 # workflows are automatically discovered in ~/.pi/agent/workflows/
-cd /workspace
+cd "${HOST_WORKSPACE_PATH}"
 
 # Run Pi as the target user
 # We use the prompt to trigger the autonomous loop
@@ -184,10 +159,6 @@ if ! pi @"${RULES_FILE}" "Immediately begin your autonomous mission. 1. Verify y
     echo "Pi failed with exit code \$?"
     read -p "Press Enter to exit..."
 fi
-
-# Cleanup dead symlinks from the workspace
-echo "Cleaning up temporary worker symlinks..."
-#rm -f /workspace/.yolo.json /workspace/workspace
 EOF
         chmod +x /tmp/worker-wrapper.sh
         chown $TARGET_USER:$TARGET_USER /tmp/worker-wrapper.sh

@@ -70,6 +70,7 @@ if [ -f "pyproject.toml" ]; then
 else
     echo "Bootstrapping greenfield Python project..."
     FRESH_INSTALL=true
+    echo "HAS_TS=true" >> .languages    
 fi
 
 # Build language independent project structure

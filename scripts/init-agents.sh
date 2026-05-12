@@ -62,6 +62,13 @@ if grep -q "$MARKER_START" "$GLOBAL_IGNORE"; then
 fi
 printf "\n$MARKER_START\n$PAYLOAD\n$MARKER_END\n" >> "$GLOBAL_IGNORE"
 
+# Create the private AI environment info
+VM_ENV="${AGENTS_DIR}/core-worker/.env"
+if [ ! -e "${VM_ENV}" ]; then
+   DATETIME=$(date -Iseconds)
+   sed -e "s|{{DATETIME}}|${DATETIME}|g" "${REPO_ROOT}/core-worker/templates/vm-env.template" "${VM_ENV}"
+fi
+
 echo "Initialization complete."
 echo "Host (Gemini) is now configured with core-planner rules."
 echo "Worker (KVM) rules are linked to ${AGENTS_DIR}/core-worker for KVM mounting."

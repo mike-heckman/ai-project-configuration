@@ -1,0 +1,71 @@
+# This is a .env file created by the init-agents.sh script at {{DATETIME}}
+
+# It is not linked in the git repo and will not be overwritten by future
+# executions of init-agents.sh any environment variables declared here
+# will be imported directly into the virtual machine workspace.  It is
+# intended for including connecting AI locations and/or keys.  Please
+# be sure to secure it with appropriate file permissions.
+
+## Pi.dev
+
+# PI_CONFIG_DIR= # Overrides the default configuration root directory (defaults to `~/.omp`).
+# PI_CODING_AGENT_DIR= # Overrides the default agent data directory (defaults to `~/.omp/agent`).
+# PI_CONTEXT_FILES= # A comma-separated list of files (e.g., SOUL.md, AGENTS.md) to automatically inject into the system prompt.
+
+## Local LLM
+
+# For a local OpenAI-compatible gateway (e.g., LiteLLM, vLLM, or LM Studio)
+# OPENAI_API_KEY="sk-not-needed"
+# OPENAI_BASE_URL="http://192.168.1.100:8000/v1"
+
+# For Ollama (specifically if using the Ollama provider)
+# OLLAMA_BASE_URL="http://192.168.1.100:11434"
+
+# If you want to force pi to use a specific model by default
+# PI_DEFAULT_MODEL="gpt-4o" # or your local model name
+
+## Anthropic
+
+# ANTHROPIC_API_KEY= # Standard API key used for Anthropic provider authentication when not using OAuth.
+# ANTHROPIC_OAUTH_TOKEN= # Used for Anthropic API authentication via OAuth; takes precedence over `ANTHROPIC_API_KEY`.
+# ANTHROPIC_FOUNDRY_API_KEY= # API key for Anthropic via Azure Foundry or enterprise gateways; used when `CLAUDE_CODE_USE_FOUNDRY` is enabled.
+# ANTHROPIC_BASE_URL= # Custom endpoint for Anthropic requests (falls back to `FOUNDRY_BASE_URL` in Foundry mode).
+# ANTHROPIC_SEARCH_API_KEY= # API key specifically for the Anthropic search subsystem.
+# ANTHROPIC_SEARCH_BASE_URL= # Optional custom base URL for the Anthropic search tool.
+# ANTHROPIC_CUSTOM_HEADERS= # A list of custom HTTP headers to include in Anthropic API requests.
+# FOUNDRY_BASE_URL= # The base URL for the Anthropic endpoint when operating in Foundry mode.
+
+## OpenAI
+
+# OPENAI_API_KEY= # API key for OpenAI-family providers (OpenAI, Azure, etc.) when no explicit key is provided in settings.
+
+## OpenRouter
+
+# OPENROUTER_API_KEY= # API key for OpenRouter; used as a fallback for image generation and other model services.
+
+## Claude
+
+# CLAUDE_CODE_USE_FOUNDRY= # Boolean (1, true, yes, on) to enable Foundry mode for Anthropic provider routing.
+# CLAUDE_CODE_CLIENT_CERT= # Injects a client certificate (PEM format or path) for mTLS authentication.
+# CLAUDE_CODE_CLIENT_KEY= # Injects a client private key (PEM format or path) for mTLS authentication.
+
+## AWS Bedrock
+
+# AWS_BEDROCK_SKIP_AUTH= # If set to 1, injects dummy credentials for Bedrock (useful for proxy or non-auth scenarios).
+# AWS_BEDROCK_FORCE_HTTP1= # If set to 1, forces the use of the Node HTTP/1 request handler for Bedrock.
+# AWS_CONTAINER_CREDENTIALS_RELATIVE_URI= # Enables the ECS task credential path for AWS authentication.
+# AWS_CONTAINER_CREDENTIALS_FULL_URI= # Enables the full ECS task credential path for AWS authentication.
+# AWS_WEB_IDENTITY_TOKEN_FILE= # Path to a web identity token file for AWS IAM role-based authentication.
+# AWS_ROLE_ARN= # The ARN of the role to assume when using AWS web identity authentication.
+
+# Other
+
+# BUN_ENV= # Set to `test` to skip Python availability checks and warming during automated testing.
+# NODE_ENV= # Set to `test` to treat Python as available and skip runtime warming.
+# COLORTERM= # Set to `truecolor` or `24bit` to force 24-bit color rendering in the terminal.
+# TERM= # Used to detect terminal capabilities; `dumb` or `linux` forces 256-color mode.
+# HTTP_PROXY= # Routes provider and AWS credential requests through the specified HTTP proxy.
+# HTTPS_PROXY= # Routes provider and AWS credential requests through the specified HTTPS proxy.
+# ALL_PROXY= # Global proxy setting for routing network traffic.
+# NO_PROXY= # Comma-separated list of hosts that should bypass the configured proxy.
+# NODE_EXTRA_CA_CERTS= # Path to additional CA certificates for TLS validation.
