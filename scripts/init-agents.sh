@@ -99,7 +99,7 @@ link_if_missing_or_not_hardlink "${WORKER_SRC}/kvm/guest-init.sh" "${AGENTS_DIR}
 
 # Populate Pi directory contents
 echo "Setting up Pi directory..."
-link_if_missing_or_not_hardlink "${PLANNER_SRC}/mcp_config.json" "${WORKER_SRC}/mcp.json"
+link_if_missing_or_not_hardlink "${PLANNER_SRC}/mcp_config.json" "${AGENTS_DIR}/pi/mcp.json"
 # Restore template link first as it is required by the bridge
 hardlink_directory "${WORKER_SRC}/templates" "${AGENTS_DIR}/pi/templates"
 

@@ -127,10 +127,11 @@ if [ ! -z "$ROLE" ]; then
             ALREADY_INSTALLED=true
         fi
 
-        # Pre-install the pi-mcp-adapter globally as root to avoid EACCES errors
-        if ! npm list -g pi-mcp-adapter &> /dev/null; then
-            echo "Installing pi-mcp-adapter globally..."
-            npm install -g pi-mcp-adapter
+        # Install the pi-mcp-adapter extension for the agent
+        if ! pi extension list | grep -q "pi-mcp-adapter"; then
+            echo "Installing pi-mcp-adapter extension..."
+            # We use the pi CLI to install it so it registers correctly as an extension
+            su - "$TARGET_USER" -c "pi extension install npm:pi-mcp-adapter"
         fi
         
         # Cleanup any legacy .npmrc from previous local-prefix attempts
