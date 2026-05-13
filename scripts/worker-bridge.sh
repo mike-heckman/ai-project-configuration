@@ -28,18 +28,77 @@ fi
 
 # --- Helper Functions ---
 
+vm_state() {
+    local vm_name=$1
+    incus list "${vm_name}" --format csv -c s
+}
+
 is_vm_running() {
     local vm_name=$1
-    [ "$(incus info "${vm_name}" 2>/dev/null | grep -i "Status:" | awk '{print $2}')" = "RUNNING" ]
+    [[ "$(vm_state "${vm_name}")" == "RUNNING" ]]
 }
 
 stop_vm_if_running() {
     local vm_name=$1
-    echo "Stopping VM: ${vm_name}..."
-    while is_vm_running "${vm_name}"; do
+    local max_stop_wait=${2:-60}
+    local stop_wait=0
+    local sleep_duration=${3:-2}
+
+    if [[ "$(vm_state "${vm_name}")" != "STOPPED" ]]; then
+        echo "Stopping VM: ${vm_name}..."
         incus stop "${vm_name}"
-        sleep 2
+        while [[ "$(vm_state "${vm_name}")" != "STOPPED" ]]; do
+            stop_wait=$((stop_wait + $sleep_duration))
+            if [ $stop_wait -ge $max_stop_wait ]; then
+                echo "Error: VM ${vm_name} Hasn't stopped in ${max_stop_wait} seconds, aborting..."
+                exit 1
+            fi        
+            sleep $sleep_duration
+        done
     fi
+}
+
+start_vm_if_not_running() {
+    local vm_name=$1
+    local max_wait=${2:-60}
+    local sleep_duration=${3:-1}
+    local waited=0
+
+    if ! is_vm_running "${vm_name}"; then
+        echo "Starting VM: ${vm_name}..."
+        if ! incus start "$vm_name" >"/tmp/incus.start" 2>&1; then
+            echo "incus ${vm_name} returned non-zero:"
+            cat "/tmp/incus.start"
+        fi
+        waited=5
+        sleep $waited
+    fi
+    echo "Waiting for VM ${vm_name} to be fully ready (hardware + agent)..."
+
+    if ! run_vm_command_timeout "${vm_name}" "${max_wait}" "${sleep_duration}" "true"; then
+        echo "Error: VM ${vm_name} (or its agent) failed to reach ready state within ${max_wait} seconds."
+        incus list
+        exit 1
+    fi
+}
+
+run_vm_command_timeout() {
+    local vm_name=$1
+    local max_wait=${2:-60}
+    local sleep_duration=${3:-1}
+    shift 3
+    # The remaining arguments ($@) are now the command and its parameters
+    local waited=0
+
+    while ! is_vm_running "$vm_name" || ! incus exec "$vm_name" -- "$@" >/dev/null 2>&1; do
+        sleep $sleep_duration
+        waited=$((waited + $sleep_duration))
+        if [ $waited -ge $max_wait ]; then
+            return 1
+        fi
+    done
+
+    return 0
 }
 
 get_bridge_ip() {
@@ -50,13 +109,23 @@ get_bridge_ip() {
 
 # --- Main Script ---
 
-# 1. Resolve core worker assets
+# 1. Network Configuration
+BRIDGE_NAME="incusbr0"
+
+# Only apply iptables rules if they are missing to reduce sudo prompts
+if ! sudo iptables -C FORWARD -i "$BRIDGE_NAME" -j ACCEPT >/dev/null 2>&1; then
+    echo "Updating host firewall for ${BRIDGE_NAME}..."
+    sudo iptables -I FORWARD 1 -i "$BRIDGE_NAME" -j ACCEPT
+    sudo iptables -I FORWARD 1 -o "$BRIDGE_NAME" -j ACCEPT
+fi
+
+# 2. Resolve core worker assets
 # If we have a local override, use that
-if [ -d "${PROJECT_PATH}/core-worker" ]; then
-    CORE_WORKER_PATH="${PROJECT_PATH}/core-worker"
-# Prioritize ~/.agents/core-worker link created by init-agents.sh
+if [ -d "${PROJECT_PATH}/.core-worker" ]; then
+    CORE_WORKER_PATH="${PROJECT_PATH}/.core-worker"
+# Prioritize ~/.agents/pi directory created by init-agents.sh
 else
-    CORE_WORKER_PATH="${HOME}/.agents/core-worker"
+    CORE_WORKER_PATH="${HOME}/.agents/pi"
     # Throw an error if the system isn't initialized
     if [ ! -d "${CORE_WORKER_PATH}" ]; then
         echo "Error: Core worker assets not found at ${CORE_WORKER_PATH}"
@@ -65,7 +134,7 @@ else
     fi
 fi
 
-# 2. Define VM parameters
+# 3. Define VM parameters
 VM_NAME="worker-${LANGUAGE}-$(basename "$PROJECT_PATH" | sed 's/[^a-zA-Z0-9-]/-/g' | tr '[:upper:]' '[:lower:]')"
 IMAGE="images:ubuntu/22.04" # Default base image
 
@@ -73,7 +142,7 @@ IMAGE="images:ubuntu/22.04" # Default base image
 PORT_OFFSET=$(echo "$VM_NAME" | cksum | awk '{print $1 % 1000}')
 HOST_PORT=$((8000 + PORT_OFFSET))
 
-# 3. Launch the VM if it doesn't exist
+# 4. Launch the VM if it doesn't exist
 VM_EXISTS=true
 if ! incus list --format csv -c n | grep -q "^${VM_NAME}$"; then
     echo "Launching new Incus VM: ${VM_NAME}"
@@ -82,37 +151,57 @@ if ! incus list --format csv -c n | grep -q "^${VM_NAME}$"; then
     
     # Wait for the VM to be ready
     echo "Waiting for VM to initialize..."
-    while ! is_vm_running "$VM_NAME"; do sleep 1; done
+    start_vm_if_not_running "$VM_NAME"
 fi
 
 if [ "$VM_EXISTS" == "false" ] || [ "$(incus config device get "$VM_NAME" workspace path 2>/dev/null)" != "$PROJECT_PATH" ]; then
     echo "Updating legacy VM configuration..."
+    start_vm_if_not_running "${VM_NAME}"
     incus exec "${VM_NAME}" -- mkdir -p "${PROJECT_PATH}" "${VM_HOME}/.agents" "${VM_HOME}/.pi"
-    stop_vm_if_running "${VM_NAME}"
 fi
 
-# 4. Configure Devices (virtiofs mounts)
-
+# 5. Configure Devices (virtiofs mounts)
 
 # Only reconfigure if the VM is stopped to avoid crashing virtiofsd
 stop_vm_if_running "${VM_NAME}"
 
-echo "Configuring mounts..."
+# Fetch bridge IP for proxy and UI
+BRIDGE_IP=$(get_bridge_ip "$BRIDGE_NAME")
+BRIDGE_PREFIX=$(echo "$BRIDGE_IP" | cut -d'.' -f1-3)
+VM_IP="${BRIDGE_PREFIX}.$((200 + (PORT_OFFSET % 50)))"
+echo "Bridge IP: $BRIDGE_IP | VM Static IP: $VM_IP"
+
+echo "Configurating mount points..."
 # Project Workspace
 incus config device remove "$VM_NAME" workspace >/dev/null 2>&1 || true
 incus config device add "$VM_NAME" workspace disk source="$PROJECT_PATH" path="$PROJECT_PATH"
+
 # Core Worker Rules
 incus config device remove "$VM_NAME" core-worker >/dev/null 2>&1 || true
-incus config device add "$VM_NAME" core-worker disk source="$CORE_WORKER_PATH" path="${VM_HOME}/.agents/core-worker"
-# Pi Config
+
+# Consolidated Pi & Core Worker mount
+# This maps the flat directory from ~/.agents/pi to the guest's Pi agent dir
 incus config device remove "$VM_NAME" pi-config >/dev/null 2>&1 || true
-incus config device add "$VM_NAME" pi-config disk source="${CORE_WORKER_PATH}/kvm/pi" path="${VM_HOME}/.pi/agent"
+incus config device add "$VM_NAME" pi-config disk source="$CORE_WORKER_PATH" path="${VM_HOME}/.pi/agent"
+
+# This maps the jCodeMunch storage location into the VM
+# DISABLED: SQLite Disk I/O errors occur when WAL-mode databases are on virtiofs mounts.
+# The worker will now maintain its own local index for stability.
+incus config device remove "$VM_NAME" codemunch-config >/dev/null 2>&1 || true
+# if [ -d "${HOME}/.code-index" ]; then
+#     incus config device add "$VM_NAME" codemunch-config disk source="${HOME}/.code-index" path="${VM_HOME}/.code-index"
+# fi
+
+# Static IP NIC (Required for NAT proxies on VMs)
+incus config device remove "$VM_NAME" eth0 >/dev/null 2>&1 || true
+incus config device add "$VM_NAME" eth0 nic nictype=bridged parent="$BRIDGE_NAME" name=eth0 ipv4.address="$VM_IP"
 
 # Pi UI (ttyd) Proxy - Intercepts guest port 7681 to a unique host port
+# Note: VMs REQUIRE nat=true, which forbids 127.0.0.1. We use the static VM_IP.
 incus config device remove "$VM_NAME" pi-ui >/dev/null 2>&1 || true
-incus config device add "$VM_NAME" pi-ui proxy "listen=tcp:${BRIDGE_IP}:${HOST_PORT}" "connect=tcp:127.0.0.1:7681" nat=true
+incus config device add "$VM_NAME" pi-ui proxy "listen=tcp:${BRIDGE_IP}:${HOST_PORT}" "connect=tcp:${VM_IP}:7681" nat=true
 
-# 5. Handle environment variables and ROLE passing
+# 6. Handle environment variables and ROLE passing
 echo "Generating environment configuration..."
 ENV_TEMPLATE="${CORE_WORKER_PATH}/templates/agent-env.template"
 ENV_PATH="${PROJECT_PATH}/.agent-worker-env"
@@ -126,45 +215,24 @@ sed -e "s|{{ROLE}}|${ROLE}|g" \
 incus config set "$VM_NAME" environment.ROLE="$ROLE"
 incus config set "$VM_NAME" environment.VM_HOME="$VM_HOME"
 incus config set "$VM_NAME" environment.HOST_WORKSPACE_PATH="$PROJECT_PATH"
-incus config set "$VM_NAME" environment.COLUMNS="$(tput cols)"
-incus config set "$VM_NAME" environment.LINES="$(tput lines)"
+incus config set "$VM_NAME" environment.COLUMNS="$(tput cols 2>/dev/null || echo 120)"
+incus config set "$VM_NAME" environment.LINES="$(tput lines 2>/dev/null || echo 80)"
 
-# 6. Start the VM (if stopped)
-incus start "$VM_NAME" >/dev/null 2>&1 || true
-while ! is_vm_running "$VM_NAME"; do sleep 1; done
+# 7. Start the VM (if stopped)
+start_vm_if_not_running "$VM_NAME" 120 2
 
-# Always fetch the bridge IP for consistent UI URLs
-BRIDGE_IP=$(get_bridge_ip "incusbr0")
-echo "Bridge IP: $BRIDGE_IP"
-
-
-# 7. Wait for VM agent and Trigger the Guest Init
-echo "Waiting for VM agent to be ready..."
-MAX_RETRIES=30
-RETRY_COUNT=0
-while ! incus exec "$VM_NAME" -- true >/dev/null 2>&1; do
-    sleep 1
-    RETRY_COUNT=$((RETRY_COUNT + 1))
-    if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-        echo "Error: VM agent failed to start within ${MAX_RETRIES} seconds."
-        exit 1
-    fi
-done
-
+# 8. Trigger the Guest Init
 # Wait for mounts to appear inside the guest
 echo "Verifying mount availability..."
-MAX_MOUNT_RETRIES=10
-MOUNT_RETRY=0
-GUEST_INIT="${VM_HOME}/.agents/core-worker/kvm/guest-init.sh"
+MAX_MOUNT_SECONDS=60
+WAIT=2
+GUEST_INIT="${VM_HOME}/.pi/agent/guest-init.sh"
 
-while ! incus exec "$VM_NAME" -- ls ${GUEST_INIT} >/dev/null 2>&1; do
-    sleep 1
-    MOUNT_RETRY=$((MOUNT_RETRY + 1))
-    if [ $MOUNT_RETRY -ge $MAX_MOUNT_RETRIES ]; then
-        echo "Error: Mount point "${VM_HOME}" not found inside guest."
-        exit 1
-    fi
-done
+if ! run_vm_command_timeout "${VM_NAME}" "${MAX_MOUNT_SECONDS}" "${WAIT}" ls "${GUEST_INIT}"; then
+    echo "Error: Agent assets not found at ${GUEST_INIT} inside guest."
+    incus list
+    exit 1
+fi
 
 echo "Triggering guest initialization..."
 incus exec "$VM_NAME" -- bash "${GUEST_INIT}"

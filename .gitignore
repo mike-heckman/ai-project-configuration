@@ -1,3 +1,6 @@
+.pi/
+.stop_worker
+
 # Python
 __pycache__/
 *.py[cod]

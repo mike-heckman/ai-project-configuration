@@ -4,12 +4,19 @@
 # In Incus VMs, the agent typically mounts disk devices automatically.
 # We'll check for our mount points.
 
+# Pre-defined environment variables
+# ROLE - The ruleset to use `coder`, `debugger`, etc
+# VM_HOME - The home directory to use in the VM
+# HOST_WORKSPACE_PATH - The mounted project path
+# COLUMNS - screen width
+# LINES - screen height
+
 echo "Verifying mounts..."
 # Disable IPv6 to prevent timeouts on systems where it's not fully routed
 sysctl -w net.ipv6.conf.all.disable_ipv6=1 >/dev/null 2>&1
 sysctl -w net.ipv6.conf.default.disable_ipv6=1 >/dev/null 2>&1
 RETRY=0
-CORE_WORKER_PATH="${VM_HOME}/.agents/core-worker"
+CORE_WORKER_PATH="${VM_HOME}/.pi/agent"
 
 while [ ! -d "${HOST_WORKSPACE_PATH}" ] || [ ! -d "${CORE_WORKER_PATH}" ]; do
     if [ $RETRY -gt 10 ]; then
@@ -38,7 +45,7 @@ fi
 
 
 if [ -f "${CORE_WORKER_PATH}/.env" ]; then
-    echo "Sourcing environment from ${VM_HOME}/.agents/core-worker/.env"
+    echo "Sourcing environment from ${CORE_WORKER_PATH}/.env"
     source "${CORE_WORKER_PATH}/.env"
 fi
 # 2. Source environment variables from workspace
@@ -79,7 +86,7 @@ ln -sf "${CORE_WORKER_PATH}/mcp_config.json" "$USER_HOME/.config/mcp/mcp.json"
 ln -sf "${CORE_WORKER_PATH}/config.jsonc" "$USER_HOME/.code-index/config.jsonc"
 ln -sf "${CORE_WORKER_PATH}/config.jsonc" "$USER_HOME/.doc-index/config.jsonc"
 
-
+INSTRUCTION_FILE="$USER_HOME/.pi/agent/AUTONOMOUS.md"
 # 6. Launch pi.dev with the specified ROLE inside tmux
 if [ ! -z "$ROLE" ]; then
     RULES_FILE="$USER_HOME/.pi/agent/rules/${ROLE}.md"
@@ -115,49 +122,67 @@ if [ ! -z "$ROLE" ]; then
         if ! command -v pi &> /dev/null; then
             echo "Pi coding agent not found. Installing..."
             npm install -g @mariozechner/pi-coding-agent
+        # Upgrade pi
+        else
+            ALREADY_INSTALLED=true
         fi
 
-        # Install pi-mcp-adapter for the target user if not present
-        if ! su - "$TARGET_USER" -c "pi list | grep -q pi-mcp-adapter 2>/dev/null"; then
-            echo "Installing pi-mcp-adapter..."
-            # First ensure pi is initialized for the user
-            su - "$TARGET_USER" -c "mkdir -p ~/.pi/agent"
-            
-            # Fix NPM permissions by using a local prefix
-            su - "$TARGET_USER" -c "mkdir -p ~/.local"
-            su - "$TARGET_USER" -c "npm config set prefix '~/.local'"
-            
-            # Since 'pi install' might be interactive or wait for confirmation, we should ensure it runs non-interactively.
-            su - "$TARGET_USER" -c "pi install npm:pi-mcp-adapter"
+        # Pre-install the pi-mcp-adapter globally as root to avoid EACCES errors
+        if ! npm list -g pi-mcp-adapter &> /dev/null; then
+            echo "Installing pi-mcp-adapter globally..."
+            npm install -g pi-mcp-adapter
         fi
+        
+        # Cleanup any legacy .npmrc from previous local-prefix attempts
+        rm -f "$USER_HOME/.npmrc"
 
         # Ensure tmux and ttyd are available
         if ! command -v tmux &> /dev/null || ! command -v ttyd &> /dev/null; then
             apt-get update && apt-get install -y tmux ttyd
         fi
         
+        # Only update if we aren't already done. This speeds up "Mission Complete" views.
+        if [ "${ALREADY_INSTALLED}" == "true" ]; then
+            echo "Checking for Pi coding agent updates..."
+            npm install -g @mariozechner/pi-coding-agent@latest
+            echo "Checking for pi-mcp-adapter updates..."
+            npm install -g pi-mcp-adapter@latest
+        fi
+
+
         # Ensure common local bin paths are in PATH
         export PATH="$PATH:/usr/local/bin:$USER_HOME/.local/bin"
         
         # Write the wrapper script (remove old one first to avoid permission issues)
         rm -f /tmp/worker-wrapper.sh
+        rm -f "${HOST_WORKSPACE_PATH}/.stop-worker" # Clear any old stop marker
         cat <<EOF > /tmp/worker-wrapper.sh
 #!/bin/bash
+# Check if we should even start
+if [ -f "${HOST_WORKSPACE_PATH}/.stop-worker" ]; then
+    echo "----------------------------------------------------------------"
+    echo "MISSION COMPLETE: Worker has finished all tasks."
+    echo "To restart, run: rm ${HOST_WORKSPACE_PATH}/.stop-worker"
+    echo "----------------------------------------------------------------"
+    # Wait forever to prevent ttyd/tmux from restarting in a loop
+    read -p "Press Enter to exit..."
+    rm -f "${HOST_WORKSPACE_PATH}/.stop-worker"
+fi
+
 # Source environment variables (API keys, etc.)
-[ -f "${VM_HOME}/.agents/core-worker/.env" ] && source "${VM_HOME}/.agents/core-worker/.env" 
+[ -f "${CORE_WORKER_PATH}/.env" ] && source "${CORE_WORKER_PATH}/.env" 
 [ -f "${HOST_WORKSPACE_PATH}/.agent-worker-env" ] && source "${HOST_WORKSPACE_PATH}/.agent-worker-env"
 
-export ANTHROPIC_API_KEY=ollama
 export PATH="\$PATH:/usr/local/bin:$USER_HOME/.local/bin"
-# workflows are automatically discovered in ~/.pi/agent/workflows/
 cd "${HOST_WORKSPACE_PATH}"
 
-# Run Pi as the target user
-# We use the prompt to trigger the autonomous loop
 set -o pipefail
-if ! pi @"${RULES_FILE}" "Immediately begin your autonomous mission. 1. Verify your environment (Node.js, npm, uv). 2. Scan the backlog in ./docs/backlog/ for READY tasks. 3. Complete and verify each task using the instructions in the rules file. 4. Once the backlog is empty and all work is verified, call the 'autonomous_mission_complete' tool to terminate the session. Do not wait for user input." 2>&1 | tee /tmp/worker.log; then
+if ! pi --session-dir "${HOST_WORKSPACE_PATH}/.pi/sessions/" @"${RULES_FILE}" "$(cat ${INSTRUCTION_FILE})"  2>&1 | tee /tmp/worker.log; then
     echo "Pi failed with exit code \$?"
     read -p "Press Enter to exit..."
+else
+    echo "Mission successful. Creating stop marker..."
+    touch "${HOST_WORKSPACE_PATH}/.stop-worker"
 fi
 EOF
         chmod +x /tmp/worker-wrapper.sh
@@ -169,8 +194,7 @@ EOF
         pkill -f ttyd 2>/dev/null || true
 
         # Run ttyd as the target user in the background
-        # -W allows writing (interactive), -p 7681 is the guest port
-        # It automatically launches/attaches to the tmux 'worker' session
+        # -W: Allow writing
         TMUX_SIZE=""
         [ ! -z "$COLUMNS" ] && [ ! -z "$LINES" ] && TMUX_SIZE="-x $COLUMNS -y $LINES"
         su - $TARGET_USER -c "nohup ttyd -p 7681 -W tmux new-session -A -s worker $TMUX_SIZE /tmp/worker-wrapper.sh > /tmp/ttyd.log 2>&1 &"

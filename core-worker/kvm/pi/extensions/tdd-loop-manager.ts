@@ -55,7 +55,7 @@ function saveState(state: StateData) {
 function getStepInstructions(state: TDDState): string {
   switch (state) {
     case TDDState.STEP_0_START_TASK:
-      return "STEP 0: Assume Coder/Debugger role. Read the task file from `./docs/backlog/`. Call `advance_tdd_step` when you have understood the task.";
+      return "STEP 0: Assume Coder/Debugger role. Check for task files in `./docs/backlog/`. Only process files that explicitly contain `status: READY`. Ignore any tasks with no status, or statuses like `IN_PROGRESS` or `COMPLETED`. If no READY tasks exist, the mission is COMPLETE—report final status and end the session. If tasks exist, read the most urgent one, and call `advance_tdd_step` when you have understood it.";
     case TDDState.STEP_1_VERIFY_CURRENT_TESTS:
       return "STEP 1: Verify current tests are working by running `/test`. Call `advance_tdd_step` once verified.";
     case TDDState.STEP_2_BUILD_NEW_TESTS:
@@ -67,15 +67,15 @@ function getStepInstructions(state: TDDState): string {
     case TDDState.STEP_5_HANDOFF:
       return "STEP 5: Handoff to Reviewer. Call `advance_tdd_step` with a comprehensive summary of your changes to be recorded in the task file.";
     case TDDState.STEP_6_REVIEW_LINT:
-      return "STEP 6 [REVIEWER]: Verify that linting passes by running `/lint`. If it fails, call `advance_tdd_step` with action='fail_review'. If it passes, action='next'.";
+      return "STEP 6 [REVIEWER]: Verify that linting passes by running `/lint`. If it passes, check off relevant items in the task file and call `advance_tdd_step` with action='next'. If it fails, do NOT check off failed items and call `advance_tdd_step` with action='fail_review'.";
     case TDDState.STEP_7_REVIEW_TESTS:
-      return "STEP 7 [REVIEWER]: Verify that all tests succeed by running `/test`. If they fail, call `advance_tdd_step` with action='fail_review'. If they pass, action='next'.";
+      return "STEP 7 [REVIEWER]: Verify that all tests succeed by running `/test`. If it passes, check off relevant items in the task file and call `advance_tdd_step` with action='next'. If it fails, do NOT check off failed items and call `advance_tdd_step` with action='fail_review'.";
     case TDDState.STEP_8_REVIEW_COVERAGE:
-      return "STEP 8 [REVIEWER]: Verify test coverage meets the minimum required. If it fails, call `advance_tdd_step` with action='fail_review'. If it passes, action='next'.";
+      return "STEP 8 [REVIEWER]: Verify test coverage meets the minimum required. If it passes, check off relevant items in the task file and call `advance_tdd_step` with action='next'. If it fails, do NOT check off failed items and call `advance_tdd_step` with action='fail_review'.";
     case TDDState.STEP_9_FAIL_RETURN:
-      return "STEP 9: The Reviewer rejected the work. Call `advance_tdd_step` to handoff back to the Coder with feedback appended to the task file.";
+      return "STEP 9: The Reviewer rejected the work. Call `advance_tdd_step` to handoff back to the Coder with feedback appended to the task file. Ensure that any items that failed review remain UNCHECKED in the task file.";
     case TDDState.STEP_10_DONE:
-      return "STEP 10 [REVIEWER]: The task is complete. Move the task file to `./docs/backlog/done/` and call `advance_tdd_step` to finish and commit changes.";
+      return "STEP 10 [REVIEWER]: The task is complete. 1. Update the `status` field in the task file to `COMPLETED`. 2. Move the task file to `./docs/backlog/done/`. 3. Call `advance_tdd_step` with action='next' to finish, commit changes, and check for the next task.";
     default:
       return "UNKNOWN STEP. Call advance_tdd_step.";
   }
@@ -87,7 +87,7 @@ export default function (pi: ExtensionAPI) {
   pi.on("before_agent_start", async (event, ctx) => {
     // Inject the TDD State Machine instructions into the system prompt
     state = loadState();
-    
+
     const isReviewer = state.currentState >= 6 && state.currentState <= 8;
     const persona = isReviewer ? "REVIEWER" : "CODER/DEBUGGER";
 
@@ -112,8 +112,8 @@ export default function (pi: ExtensionAPI) {
       }
     }
 
-    const langInfo = detectedLangs.length > 0 
-      ? `Project Environment: **${detectedLangs.join(" + ")}**` 
+    const langInfo = detectedLangs.length > 0
+      ? `Project Environment: **${detectedLangs.join(" + ")}**`
       : "Project Environment: **General**";
 
     const injection = `
@@ -171,14 +171,14 @@ You MUST execute the tool \`advance_tdd_step\` when you complete the requirement
     }),
     async execute(toolCallId, params, signal, onUpdate, ctx) {
       state = loadState();
-      
+
       // Handle Git Branching at Step 0
       if (state.currentState === TDDState.STEP_0_START_TASK && params.taskFilePath) {
         state.activeTaskFile = params.taskFilePath;
         try {
           const branch = execSync("git rev-parse --abbrev-ref HEAD", { cwd: "/workspace" }).toString().trim();
           const dateStr = new Date().toISOString().split('T')[0].replace(/-/g, '');
-          
+
           // If on main/master, pull latest changes before branching
           if (branch === "main" || branch === "master") {
             try {
@@ -188,7 +188,7 @@ You MUST execute the tool \`advance_tdd_step\` when you complete the requirement
               ctx.ui.notify("Failed to git pull", "warning");
             }
           }
-          
+
           // If on main/master, or on a legacy task branch, switch to the daily branch
           if (branch === "main" || branch === "master" || branch.startsWith("task/")) {
             if (branch !== dateStr) {
@@ -213,10 +213,13 @@ You MUST execute the tool \`advance_tdd_step\` when you complete the requirement
       // Handle Fail Review
       if (params.action === "fail_review" && state.currentState >= 6 && state.currentState <= 8) {
         state.currentState = TDDState.STEP_9_FAIL_RETURN;
-      } 
+      }
       // Handle Next
       else if (params.action === "next") {
-        if (state.currentState < TDDState.STEP_10_DONE) {
+        if (state.currentState === TDDState.STEP_10_DONE) {
+          state.currentState = TDDState.STEP_0_START_TASK;
+          state.activeTaskFile = null;
+        } else if (state.currentState < TDDState.STEP_10_DONE) {
           if (state.currentState === TDDState.STEP_9_FAIL_RETURN) {
             state.currentState = TDDState.STEP_0_START_TASK;
           } else {
@@ -225,13 +228,13 @@ You MUST execute the tool \`advance_tdd_step\` when you complete the requirement
         }
       }
 
-      const isRoleChange = 
+      const isRoleChange =
         (previousState === TDDState.STEP_5_HANDOFF && state.currentState === TDDState.STEP_6_REVIEW_LINT) ||
         (previousState === TDDState.STEP_9_FAIL_RETURN && state.currentState === TDDState.STEP_0_START_TASK);
 
       if (isRoleChange) {
         state.pendingCutoff = true;
-        
+
         if (params.taskFilePath && params.summaryOrFeedback) {
           try {
             const absolutePath = path.resolve("/workspace", params.taskFilePath);

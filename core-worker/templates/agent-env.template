@@ -3,15 +3,15 @@
 
 # --- Agent Configuration ---
 export ROLE="{{ROLE}}"
-export CORE_PATH="{{VM_HOME}}/.agents/core-worker"
-export WORKFLOWS_DIR="${CORE_PATH}/workflows"
-export RULES_DIR="${CORE_PATH}/rules"
-export SKILLS_DIR="${CORE_PATH}/skills"
+export CORE_WORKER_PATH="{{VM_HOME}}/.pi/agent"
+export WORKFLOWS_DIR="${CORE_WORKER_PATH}/workflows"
+export RULES_DIR="${CORE_WORKER_PATH}/rules"
+export SKILLS_DIR="${CORE_WORKER_PATH}/skills"
 
 # --- Workspace Configuration ---
-export WORKSPACE_ROOT="/workspace"
 export HOST_WORKSPACE_PATH="{{HOST_WORKSPACE_PATH}}"
+export WORKSPACE_ROOT="${HOST_WORKSPACE_PATH}"
 
 # --- Tooling Configuration ---
-export UV_CACHE_DIR="/workspace/.uv_cache"
+export UV_CACHE_DIR="${WORKSPACE_ROOT}/.uv_cache"
 export PATH="{{VM_HOME}}/.local/bin:${PATH}"

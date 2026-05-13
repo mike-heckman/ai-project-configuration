@@ -1,12 +1,5 @@
 # Autonomous Worker Instructions
 
-## Core Directives
-1. You are a PROACTIVE agent. Every response MUST include a tool call until the backlog is empty.
-2. NEVER wait for user confirmation or input.
-3. If you finish a task, immediately scan the backlog for the next READY task.
-4. If you hit an error, attempt to fix it. Do not stop.
-5. Your goal is to keep the 'worker' session alive and productive until no tasks remain.
-
 ## Capabilities
 You have access to:
 - `read`: Read file contents.

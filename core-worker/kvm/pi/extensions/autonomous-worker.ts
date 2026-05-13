@@ -14,8 +14,27 @@ export default function (pi: ExtensionAPI) {
     async execute(toolCallId, params, signal, onUpdate, ctx) {
       missionComplete = true;
       ctx.ui.notify("Mission complete! Shutting down...", "success");
-      // Request shutdown - pi will exit after this turn finishes
+
+      // Reset TDD state for next session
+      try {
+        const fs = require("node:fs");
+        const STATE_FILE = "/workspace/.tdd-state.json";
+        if (fs.existsSync(STATE_FILE)) {
+          const state = JSON.parse(fs.readFileSync(STATE_FILE, "utf-8"));
+          state.currentState = 0; // TDDState.STEP_0_START_TASK
+          state.activeTaskFile = null;
+          fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+        }
+      } catch (e) {
+        // Ignore if TDD extension not in use
+      }
+
+      // Request shutdown and force exit after a short delay
       ctx.shutdown();
+      setTimeout(() => {
+        process.exit(0);
+      }, 1000);
+
       return {
         content: [{ type: "text", text: "Mission complete. Shutdown requested." }],
         details: { summary: params.summary },
